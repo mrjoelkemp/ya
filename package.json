@@ -1,0 +1,28 @@
+{
+  "name": "ya",
+  "version": "0.0.1",
+  "description": "Preprocessors taken care of",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrjoelkemp/ya"
+  },
+  "keywords": [
+    "productivity",
+    "build",
+    "process",
+    "automation"
+  ],
+  "author": "Joel Kemp <joel@mrjoelkemp.com>",
+  "license": "MIT",
+  "dependencies": {
+    "q": "~1.0.0",
+    "node-unique-extensions": "~1.0.0"
+  },
+  "bin": {
+    "ya": "bin/ya.js"
+  }
+}
