@@ -81,8 +81,9 @@ module.exports.prototype.flushConfig = function (config) {
 
   var deferred = q.defer(),
       dirName  = this.directory[this.directory.length - 1] === '/' ? this.directory : this.directory + '/',
-      gruntDef = require('./generateGruntfile')(config);
+      gruntDef = generateGruntfile(config);
 
+  // Substitute the generated configuration
   gruntDef = gruntDef.toString().replace('generatedConfig', JSON.stringify(config, null, 2));
   gruntDef = 'module.exports = ' + gruntDef;
 
@@ -99,6 +100,39 @@ module.exports.prototype.flushConfig = function (config) {
 
   return deferred.promise;
 };
+
+// Helper that returns a function whose body represents
+// a gruntfile definition
+function generateGruntfile (generatedConfig) {
+  return function(grunt) {
+    var path = require('path');
+
+    require('load-grunt-tasks')(grunt);
+
+    grunt.initConfig(generatedConfig);
+
+    grunt.registerTask('default', ['watch']);
+
+    // Handle new files with that have a new, supported preprocessor
+    grunt.event.on('watch', function(action, filepath) {
+      if (action !== 'added') return;
+
+      var ext = path.extname(filepath);
+
+      // Ignore directories
+      if (! ext) return;
+
+      // This is a special message that's parsed by Mule
+      // to determine if support for an additional preprocessor is necessary
+      // Note: this allows us to avoid controlling grunt manually within Mule
+      console.log('EXTADDED:' + ext);
+    });
+
+    // For watching entire directories but allowing
+    // the grunt.event binding to take care of it
+    grunt.registerTask('noop', function () {});
+  };
+}
 
 // Runs the given grunt task, or simply 'grunt' (the default task) if not supplied
 // Resolve when done
