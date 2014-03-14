@@ -186,15 +186,16 @@ Ya.prototype.processExtension = function (ext) {
 ///////////////
 
 function installDependencies() {
-  var dependencies = ['load-grunt-tasks', 'grunt-ya', 'grunt-contrib-watch'];
+  var dependencies = ['grunt', 'grunt-cli', 'load-grunt-tasks', 'grunt-contrib-watch'];
 
   return q.all(dependencies.map(lib.isLibInstalled))
     .then(function (results) {
       // Only install the libs that haven't already been installed
-      var notInstalled = results.filter(function (alreadyInstalled) {
-        return ! alreadyInstalled;
+      var notInstalled = dependencies.filter(function (dep, idx) {
+        return ! results[idx];
       });
 
+      console.log('Installing: ', notInstalled);
       return q.all(notInstalled.map(lib.installLib));
     });
 }
