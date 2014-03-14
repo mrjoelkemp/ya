@@ -5,11 +5,9 @@ YA
 
 ### Motivation
 
-It's silly that we have to waste time defining configuration files or build scripts
-for simple projects. Our tools should do that for us.
-
-I just wanted to use my favorite preprocessors freely and have a tool download whatever
-dependencies I need to make that happen – recompiling my changes along the way.
+We shouldn't have to waste time defining configuration files or build scripts
+for small projects. Our tools should do that for us – downloading any
+dependencies and recompiling changes along the way.
 
 YA is that tool. It manages Grunt behind the scenes and auto-generates your Gruntfile.
 
@@ -17,17 +15,19 @@ YA is that tool. It manages Grunt behind the scenes and auto-generates your Grun
 
 ### Usage
 
-YA was built for ease of use.
-
 `ya [directory]` (defaults to `.` if directory is not supplied)
 
 Simply run `ya` in an empty or non-empty directory and it'll do the following:
 
 1. generate a dummy package.json (if you don't have one)
-2. download (as devDependencies) what's needed for any existing preprocessors
-3. generate a Gruntfile in `directory`
+2. download (as devDependencies) what's needed for any existing preprocessors found in `directory`
+3. generate/overwrite a Gruntfile in `directory`
 4. compile any existing files
-5. watch the directory for new preprocessors (repeating steps 2 to 4) or changes to recompile
+5. watch `directory` for new preprocessors (repeating steps 2 to 4)
+6. watch `directory` for changes and recompile
+
+If you need to customize the Gruntfile for more advanced uses, modify the gruntfile and
+just continue to use `grunt` instead of `ya`.
 
 ### Preprocessors Supported
 
