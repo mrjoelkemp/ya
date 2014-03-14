@@ -195,7 +195,8 @@ function installDependencies() {
         return ! results[idx];
       });
 
-      console.log('Installing: ', notInstalled);
+      if (notInstalled.length) console.log('Installing: ', notInstalled);
+
       return q.all(notInstalled.map(lib.installLib));
     });
 }
