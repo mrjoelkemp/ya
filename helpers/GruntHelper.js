@@ -164,6 +164,9 @@ module.exports.prototype.runTask = function (taskName) {
 // Triggers grunt's watch task
 // Note: We don't use runTask to get access to the child process
 module.exports.prototype.watch = function () {
+  // Prevent multiple watch calls
+  if (this.watchChild) return;
+
   console.log('Starting grunt watch');
 
   var d = q.defer(),
@@ -199,7 +202,26 @@ module.exports.prototype.watch = function () {
 
   }.bind(this));
 
+  this.watchChild = child;
+
   return d.promise;
+};
+
+// Restarts the existing watch process
+module.exports.prototype.rewatch = function () {
+  var cb = function () {
+    this.watchChild = null;
+    this.watch();
+  }.bind(this);
+
+  // Kill the existing watch
+  if (this.watchChild) {
+    this.watchChild.on('close', cb);
+
+    this.watchChild.kill('SIGHUP');
+  } else {
+    cb();
+  }
 };
 
 // Triggers the compile tasks to precompile any existing files

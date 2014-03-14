@@ -146,7 +146,11 @@ Ya.prototype.processAdditionalExtension = function (ext) {
         .then(function () {
           return this.grunt.compileTasks(config);
         }.bind(this));
-      }.bind(this))
+    }.bind(this))
+
+    .then(function () {
+      this.grunt.rewatch();
+    }.bind(this))
 
     .done();
 };
