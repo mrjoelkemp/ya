@@ -23,7 +23,7 @@ Simply run `ya` in an empty or non-empty directory and it'll do the following:
 2. download (as devDependencies) what's needed for any existing preprocessors found in `directory`
 3. generate/overwrite a Gruntfile in `directory`
 4. compile any existing files
-5. watch `directory` for new preprocessors (repeating steps 2 to 4)
+5. watch `directory` for new preprocessors (repeating steps 2 to 6)
 6. watch `directory` for changes and recompile
 
 If you need to customize the Gruntfile for more advanced uses, modify the gruntfile and
