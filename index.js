@@ -16,7 +16,13 @@ Ya.prototype.init = function (directory) {
   this.grunt = new GruntHelper(this.directory);
   this.grunt.on('added', this.onAddedExtensions.bind(this));
 
-  installDependencies()
+  hasPackageJsonFile(this.directory)
+    .then(function (hasFile) {
+      if (! hasFile) {
+        return createEmptyPackageJsonFile(this.directory);
+      }
+    }.bind(this))
+    .then(installDependencies)
     .then(getUniqueExtensions.bind(this))
     .then(getSupportedExtensions.bind(this))
 
@@ -216,6 +222,59 @@ function getSupportedExtensions(extensions) {
 
 function processSupportedExtensions(extensions) {
   return q.all(extensions.map(this.processExtension.bind(this)));
+}
+
+function hasPackageJsonFile(directory) {
+  if (! directory) throw new Error('directory not given');
+
+  var deferred = q.defer();
+
+  // TODO: Are we guaranteed for the package.json file to live in supplied directory?
+  directory = slashDir(directory);
+
+  fs.exists(directory + 'package.json', function (exists) {
+    deferred.resolve(exists);
+  });
+
+  return deferred.promise;
+}
+
+// Returns a json object representing an empty package.json file
+function getDummyPackageJson () {
+  return {
+    'author': '',
+    'name': '',
+    'description': '',
+    'version': '',
+    'repository': {
+      'url': ''
+    },
+    'dependencies': {},
+    'devDependencies': {
+      'ya.js': '*'
+    },
+    'main': '',
+    'license': ''
+  };
+}
+
+function createEmptyPackageJsonFile(directory) {
+  directory = slashDir(directory);
+
+  var emptyPackageFile = JSON.stringify(getDummyPackageJson(), null, 2),
+      deferred = q.defer();
+
+  fs.writeFile(directory + 'package.json', emptyPackageFile, function (err) {
+    if (err) deferred.reject();
+    else deferred.resolve();
+  });
+
+  return deferred.promise;
+}
+
+// Helper to return a slash-trailed version of the directory name
+function slashDir(directory) {
+  return directory[directory.length - 1] === '/' ? directory : directory + '/';
 }
 
 module.exports = new Ya();
