@@ -5,9 +5,10 @@ YA
 
 ### Motivation
 
-We shouldn't have to waste time defining configuration files or build scripts
-for small projects. Our tools should do that for us – downloading any
-dependencies and recompiling changes along the way.
+Tools like Grunt and Gulp are good for large applications. However, for smaller projects,
+we shouldn't have to waste time defining configuration files or build scripts.
+Our tools should do that for us – downloading any dependencies and
+recompiling changes along the way.
 
 YA is that tool. It manages Grunt behind the scenes and auto-generates your Gruntfile.
 
@@ -17,7 +18,7 @@ YA is that tool. It manages Grunt behind the scenes and auto-generates your Grun
 
 `ya [directory]` (defaults to `.` if directory is not supplied)
 
-Simply run `ya` in an empty or non-empty directory and it'll do the following:
+That's it. Simply run `ya` in an empty or non-empty directory and it'll do the following for you
 
 1. generate a dummy package.json (if you don't have one)
 2. download (as devDependencies) what's needed for any existing preprocessors found in `directory`
