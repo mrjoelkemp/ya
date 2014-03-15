@@ -30,6 +30,30 @@ That's it. Simply run `ya` in an empty or non-empty directory and it'll do the f
 If you need to customize the Gruntfile for more advanced uses, modify the gruntfile and
 just continue to use `grunt` instead of `ya`.
 
+### Example
+
+**Starting a new project**
+
+* Make a new directory and `cd` into it
+* `npm install ya.js`
+* `ya`
+* Create a new file like `styles.scss` anywhere within that directory or a subfolder
+* YA will detect the use of the `.scss` preprocessor and do the following:
+ * install `grunt-contrib-sass`
+ * generate the Gruntfile.js that has the configuration to compile and watch `.scss` files
+ * compile `styles.scss` into `styles.css` (in the same location)
+ * initiate `grunt watch`
+* Create files that use any of YA's supported preprocessors and YA will take care of it.
+
+### Why should you use YA?
+
+If you just need to build something quickly and don't want to waste time
+maintaining a build script (like a Gruntfile or Gulpfile), then YA shines.
+
+YA is not a tool for large-scale application development, but allows you
+to use Grunt to take over where YA leaves off. YA sacrifices extensibility
+for ease of use.
+
 ### Preprocessors Supported
 
 **CSS**
