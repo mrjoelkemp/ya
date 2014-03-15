@@ -32,11 +32,16 @@ just continue to use `grunt` instead of `ya`.
 
 ### Example
 
+*Here are some walkthroughs of using YA*
+
 **Starting a new project**
 
 * Make a new directory and `cd` into it
-* `npm install ya.js`
-* `ya`
+* Set up the directory however you like (add subfolders, use a Yeoman generator)
+* Run `npm install ya.js` to install YA
+* Run `ya` in the root of that directory (or specify a particular directory `ya app/assets`)
+ * YA will detect the lack of a `package.json` file and mock one up for you
+ * YA will download `grunt`, `grunt-cli`, and any other startup modules (as devDependencies)
 * Create a new file like `styles.scss` anywhere within that directory or a subfolder
 * YA will detect the use of the `.scss` preprocessor and do the following:
  * install `grunt-contrib-sass`
@@ -44,6 +49,20 @@ just continue to use `grunt` instead of `ya`.
  * compile `styles.scss` into `styles.css` (in the same location)
  * initiate `grunt watch`
 * Create files that use any of YA's supported preprocessors and YA will take care of it.
+
+**YA an existing project**
+
+* `cd` into your project's directory
+* Run `ya` (or `ya [directory]` for `ya` to manage a subfolder)
+* YA will scan the directory's files for preprocessor extensions (like `.scss`, `.coffee`, etc)
+* For each preprocessor, YA will:
+ * download the `grunt-contrib-*` package to compile the preprocessor
+ * generate the Grunt config to compile and watch files using the preprocessor
+* YA will generate `Gruntfile.js` into the directory it's managing
+* YA will recompile any files using preprocessors
+* YA will run `grunt watch` to watch for new preprocessors being used and for file changes
+
+**Note: If you have an existing Gruntfile, YA will overwrite it.**
 
 ### Why should you use YA?
 
