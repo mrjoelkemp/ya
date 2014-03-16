@@ -30,6 +30,21 @@ That's it. Simply run `ya` in an empty or non-empty directory and it'll do the f
 If you need to customize the Gruntfile for more advanced uses, modify the gruntfile and
 just continue to use `grunt` instead of `ya`.
 
+### Assumptions
+
+YA assumes:
+
+* You don't care about separating your preprocessed files from their compiled equivalents
+ * YA compiles a file like `mydir/styles.scss` into `mydir/styles.css`
+* You don't care about maintaining a Gruntfile
+ * YA overwrites an existing Gruntfile (or creates one) in the directory being watched
+* You want all grunt-specific plugins installed as devDependencies
+* You'll take care of generating an index.html file that references any scripts/stylesheets you've created
+
+YA currenly only compiles preprocessed files, but could be extended to
+support image compression, browserify auto-configuration, live-reload,
+and other common build processes.
+
 ### Example
 
 *Here are some walkthroughs of using YA*
