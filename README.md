@@ -114,4 +114,5 @@ grunt plugin that should be used for compiling that preprocessor.
 
 ### Changelog
 
+v0.2.0 Added Slim Support
 v0.1.0 Added Compass Support
