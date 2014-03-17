@@ -94,6 +94,9 @@ for ease of use.
 
 * sass
 * less
+* compass
+ * YA expects Compass to be installed. Otherwise, it will use pure, non-compass sass compilation.
+ * YA also respects projects created using `compass create` and will modify the settings to use the `sass/` and `stylesheets/` directories.
 
 **JS**
 
@@ -106,3 +109,8 @@ for ease of use.
 Adding support for a new preprocessor involves creating a
 new `-settings.js` files in `ya/settings/` and adding the details about the
 grunt plugin that should be used for compiling that preprocessor.
+
+
+### Changelog
+
+v0.1.0 Added Compass Support
