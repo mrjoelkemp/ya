@@ -1,6 +1,6 @@
 {
   "name": "ya.js",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Preprocessors taken care of",
   "main": "index.js",
   "scripts": {
