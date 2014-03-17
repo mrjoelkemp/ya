@@ -1,14 +1,14 @@
 var gux         = require('node-unique-extensions'),
     fs          = require('fs'),
     q           = require('q'),
-    lib         = require('./helpers/LibHelper'),
+    npmh        = require('./helpers/NpmHelper'),
     GruntHelper = require('./helpers/GruntHelper');
 
-var Ya = function () {
-  this.directory = '.';
+function Ya () {
+  this.directory         = '.';
   this.processedPromises = [];
-  this.extensions = [];
-};
+  this.extensions        = [];
+}
 
 Ya.prototype.init = function (directory) {
   this.directory = directory || this.directory;
@@ -16,10 +16,10 @@ Ya.prototype.init = function (directory) {
   this.grunt = new GruntHelper(this.directory);
   this.grunt.on('added', this.onAddedExtensions.bind(this));
 
-  hasPackageJsonFile(this.directory)
+  npmh.hasPackageJsonFile(this.directory)
     .then(function (hasFile) {
       if (! hasFile) {
-        return createEmptyPackageJsonFile(this.directory);
+        return npmh.createEmptyPackageJsonFile(this.directory);
       }
     }.bind(this))
     .then(installDependencies)
@@ -100,11 +100,12 @@ Ya.prototype.getExtensionSettings = function (ext) {
 
   return this.isExtensionSupported(ext)
     .then(function (isSupported) {
-      var settings;
-
       if (isSupported) {
-        settings = require(this.getSettingsFilepath(ext));
-        return settings;
+        // Settings will either be an object literal
+        // for simple preprocessors that have static settings
+        // or a promise that resolves with the settings
+        // for preprocessors performing async to determine settings
+        return require(this.getSettingsFilepath(ext));
 
       } else {
         return null;
@@ -168,7 +169,7 @@ Ya.prototype.processExtension = function (ext) {
     .then(function (extSettings) {
       // Cache for later chains
       settings = extSettings;
-      return lib.isLibInstalled(settings.lib);
+      return npmh.isLibInstalled(settings.lib);
     })
     .then(function (isInstalled) {
       if (isInstalled) {
@@ -176,7 +177,7 @@ Ya.prototype.processExtension = function (ext) {
         return settings;
       }
 
-      return lib.installLib(settings.lib)
+      return npmh.installLib(settings.lib)
         .then(function () {
           console.log(settings.lib + ' installed');
           // Add to the config, a grunt target for that extension
@@ -192,7 +193,7 @@ Ya.prototype.processExtension = function (ext) {
 function installDependencies() {
   var dependencies = ['grunt', 'grunt-cli', 'load-grunt-tasks', 'grunt-contrib-watch'];
 
-  return q.all(dependencies.map(lib.isLibInstalled))
+  return q.all(dependencies.map(npmh.isLibInstalled))
     .then(function (results) {
       // Only install the libs that haven't already been installed
       var notInstalled = dependencies.filter(function (dep, idx) {
@@ -201,7 +202,7 @@ function installDependencies() {
 
       if (notInstalled.length) console.log('Installing: ', notInstalled);
 
-      return q.all(notInstalled.map(lib.installLib));
+      return q.all(notInstalled.map(npmh.installLib));
     });
 }
 
@@ -228,59 +229,6 @@ function getSupportedExtensions(extensions) {
 
 function processSupportedExtensions(extensions) {
   return q.all(extensions.map(this.processExtension.bind(this)));
-}
-
-function hasPackageJsonFile(directory) {
-  if (! directory) throw new Error('directory not given');
-
-  var deferred = q.defer();
-
-  // TODO: Are we guaranteed for the package.json file to live in supplied directory?
-  directory = slashDir(directory);
-
-  fs.exists(directory + 'package.json', function (exists) {
-    deferred.resolve(exists);
-  });
-
-  return deferred.promise;
-}
-
-// Returns a json object representing an empty package.json file
-function getDummyPackageJson () {
-  return {
-    'author': '',
-    'name': '',
-    'description': '',
-    'version': '',
-    'repository': {
-      'url': ''
-    },
-    'dependencies': {},
-    'devDependencies': {
-      'ya.js': '*'
-    },
-    'main': '',
-    'license': ''
-  };
-}
-
-function createEmptyPackageJsonFile(directory) {
-  directory = slashDir(directory);
-
-  var emptyPackageFile = JSON.stringify(getDummyPackageJson(), null, 2),
-      deferred = q.defer();
-
-  fs.writeFile(directory + 'package.json', emptyPackageFile, function (err) {
-    if (err) deferred.reject();
-    else deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-// Helper to return a slash-trailed version of the directory name
-function slashDir(directory) {
-  return directory[directory.length - 1] === '/' ? directory : directory + '/';
 }
 
 module.exports = new Ya();
