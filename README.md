@@ -104,6 +104,7 @@ for ease of use.
 
 **HTML**
 
+* slim
 * jade
 
 Adding support for a new preprocessor involves creating a
