@@ -2,7 +2,8 @@ var fs           = require('fs'),
     q            = require('q'),
     exec         = require('child_process').exec,
     EventEmitter = require('events').EventEmitter,
-    util         = require('util');
+    util         = require('util'),
+    utils        = require('./Utils');
 
 module.exports = function (directory) {
   EventEmitter.call(this);
@@ -80,7 +81,7 @@ module.exports.prototype.flushConfig = function (config) {
   if (! config) throw new Error('Grunt config cannot be empty');
 
   var deferred = q.defer(),
-      dirName  = this.directory[this.directory.length - 1] === '/' ? this.directory : this.directory + '/',
+      dirName  = utils.slashDir(this.directory),
       gruntDef = generateGruntfile(config);
 
   // Substitute the generated configuration
