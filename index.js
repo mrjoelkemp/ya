@@ -1,8 +1,8 @@
 var gux         = require('node-unique-extensions'),
-    fs          = require('fs'),
     q           = require('q'),
     npmh        = require('./helpers/NpmHelper'),
-    GruntHelper = require('./helpers/GruntHelper');
+    GruntHelper = require('./helpers/GruntHelper'),
+    utils       = require('./helpers/Utils');
 
 function Ya () {
   this.directory         = '.';
@@ -75,10 +75,7 @@ Ya.prototype.isExtensionSupported = function (ext) {
   var deferred = q.defer();
 
   if (ext) {
-
-    fs.exists(this.getSettingsFilepath(ext), function (exists) {
-      deferred.resolve(exists);
-    });
+    return utils.exists(this.getSettingsFilepath(ext));
 
   } else {
     deferred.resolve(false);
