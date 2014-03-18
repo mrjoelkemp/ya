@@ -1,7 +1,7 @@
 {
   "name": "ya.js",
   "version": "0.4.0",
-  "description": "Preprocessors taken care of",
+  "description": "Use your favorite preprocessors without the hassle of configuration",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
