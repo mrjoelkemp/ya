@@ -20,7 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "q": "~1.0.0",
-    "node-unique-extensions": "~1.0.0"
+    "node-unique-extensions": "~2.0.0"
   },
   "bin": {
     "ya": "bin/ya.js"
