@@ -103,6 +103,7 @@ for ease of use.
 
 * coffee
 * jsx
+* typescript
 
 **HTML**
 
