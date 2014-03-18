@@ -94,6 +94,7 @@ for ease of use.
 
 * sass
 * less
+* stylus
 * compass
  * YA expects Compass to be installed. Otherwise, it will use pure, non-compass sass compilation.
  * YA also respects projects created using `compass create` and will modify the settings to use the `sass/` and `stylesheets/` directories.
