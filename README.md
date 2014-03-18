@@ -45,7 +45,7 @@ YA currenly only compiles preprocessed files, but could be extended to
 support image compression, browserify auto-configuration, live-reload,
 and other common build processes.
 
-### Example
+### Examples
 
 *Here are some walkthroughs of using YA*
 
@@ -116,6 +116,6 @@ grunt plugin that should be used for compiling that preprocessor.
 
 ### Changelog
 
-v0.3.0 Added JSX Support
-v0.2.0 Added Slim Support
-v0.1.0 Added Compass Support
+* v0.3.0 Added JSX Support
+* v0.2.0 Added Slim Support
+* v0.1.0 Added Compass Support
