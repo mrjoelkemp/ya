@@ -1,5 +1,4 @@
-YA
-===
+# YA [![npm](http://img.shields.io/npm/v/ya.js.svg)](https://npmjs.org/package/ya.js) [![npm](http://img.shields.io/npm/dm/ya.js.svg)](https://npmjs.org/package/ya.js)
 
 *Like "Ya mule!"*
 
