@@ -205,12 +205,9 @@ function installDependencies() {
 
 // Returns all extensions found in the current directory
 function getUniqueExtensions() {
-  // Folders to ignore
-  var exclusions = ['node_modules', '.git', '.sass-cache', 'bower_components', 'vendor'];
-
   // Grab list of extensions used in the supplied directory
   // TODO: If async version is needed, return promise that resolves with list
-  return gux(this.directory, exclusions);
+  return gux(this.directory, utils.ignoredDirs);
 }
 
 // Returns a system-supported subset of the given list
