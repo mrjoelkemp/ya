@@ -3,6 +3,17 @@ var q = require('q'),
     fs    = require('fs'),
     utils = require('./Utils');
 
+// Resolves if the lib is already installed or when it's done
+// installing, if missing
+module.exports.installIfNecessary = function (lib) {
+  return this.isLibInstalled(lib)
+    .when(function (isInstalled) {
+      if (isInstalled) return;
+
+      return this.installLib(lib);
+    }.bind(this));
+};
+
 // A library/module is already installed if its folder exists
 // within node_modules
 // TODO: Why not just use require.resolve?
