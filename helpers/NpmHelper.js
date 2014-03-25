@@ -8,7 +8,10 @@ var q = require('q'),
 module.exports.installIfNecessary = function (lib) {
   return this.isLibInstalled(lib)
     .then(function (isInstalled) {
-      if (isInstalled) return;
+      if (isInstalled) {
+        console.log(lib + ' already installed');
+        return;
+      }
 
       return this.installLib(lib)
         .then(function () {
