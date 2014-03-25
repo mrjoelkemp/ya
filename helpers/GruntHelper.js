@@ -8,9 +8,17 @@ var fs           = require('fs'),
 module.exports = function (directory) {
   EventEmitter.call(this);
   this.directory  = directory;
+
+  this.ignoreWatchDirectories = utils.ignoredDirs;
 };
 
 util.inherits(module.exports, EventEmitter);
+
+module.exports.prototype.ignoreDirectory = function (directory) {
+  if (directory && this.ignoreWatchDirectories.indexOf(directory) === -1) {
+    this.ignoreWatchDirectories.push(directory);
+  }
+};
 
 // Takes in the list of settings per supported/found extension
 // and returns the grunt configuration object
@@ -48,17 +56,22 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
 
   // Watch the files for handled extensions
   Object.keys(gruntConfig).forEach(function (target, idx) {
+    var currentExt = extensions[idx];
+
     watchConfig[target] = {
-      files: ['**/*' + extensions[idx], '!node_modules/**/*' + extensions[idx]],
+      files: ['**/*' + currentExt].concat(this.getIgnoredDirectories(currentExt)),
       // Execute the compile task for the given extension (its target name)
       tasks: [target]
     };
+
+    // Special case to avoid watching the js bundle
+    if (currentExt === '.js') watchConfig[target].files.push('!bundle.js');
 
   }.bind(this));
 
   // Watch the directory for file additions
   watchConfig['all'] = {
-    files: ['**/*', '!node_modules/**/*'],
+    files: ['**/*'].concat(this.getIgnoredDirectories()),
     tasks: ['noop'],
     options: {
       // https://github.com/gruntjs/grunt-contrib-watch/issues/166
@@ -72,6 +85,17 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
   gruntConfig.watch = watchConfig;
 
   return gruntConfig;
+};
+
+// Returns a list of strings specifying folders for grunt to ignore
+// Note: Uses the exclamation point ignore syntax
+// @param {String} [ext] Appended to the ignore strings
+module.exports.prototype.getIgnoredDirectories = function (ext) {
+  ext = ext || '';
+
+  return this.ignoreWatchDirectories.map(function (dir) {
+    return '!' + utils.slashDir(dir) + '**/*' + ext;
+  });
 };
 
 // Writes the Gruntfile.js file in the current directory with the given config
