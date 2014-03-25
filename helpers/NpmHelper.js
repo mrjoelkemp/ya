@@ -13,6 +13,8 @@ module.exports.installIfNecessary = function (lib) {
         return;
       }
 
+      console.log('Installing ' + lib);
+
       return this.installLib(lib)
         .then(function () {
           console.log(lib + ' was installed');
