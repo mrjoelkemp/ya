@@ -1,48 +1,70 @@
 var q = require('q'),
-    npmh = require('../helpers/NpmHelper'),
-    utils = require('../helpers/Utils');
+    npmh  = require('../helpers/NpmHelper'),
+    utils = require('../helpers/Utils'),
+    gr    = require('app-root'),
+    gmt   = require('module-definition'),
+    path = require('path');
 
-// Install dependencies
-return q.all(['app-root', 'module-definition'].map(npmh.installIfNecessary.bind(npmh)))
-  .then(init);
+// Generate browserify/requirejs configurations based on
+// the root files in the managed directory
+var directory = process.argv[2] || '.';
 
-function init() {
+module.exports = getRoots(directory)
+  .then(function (roots) {
+    return q.all(roots.map(getModuleType))
+      .then(function (moduleTypes) {
+        var browserifyTargets = {},
+            requireJSTargets  = {},
+            allTargets        = {},
+            libs              = [];
 
-  // Find all roots in the working directory
-  return getRoots()
-    .then(function (roots) {
-      return q.all(roots.map(getModuleType))
-        .then(function (moduleTypes) {
-          var browserifyTargets = {},
-              requireJSTargets = {};
+        // Generate a target per root (targets could use
+        // different settings if they're using different module types)
+        roots.forEach(function (root, idx) {
+          var moduleType  = moduleTypes[idx],
+              relRoot     = path.relative(directory, root),
+              target      = getTargetForRoot(relRoot, moduleType);
 
-          // Generate a target per root (targets could use different settings if they're using different module types)
-          roots.forEach(function (root, idx) {
-            var moduleType = moduleTypes[idx];
-            var target = getTargetForRoot(root, moduleType);
-            if (moduleType === 'commonjs') {
-              browserifyTargets['t' + idx] = target;
+          console.log('Found the ' + moduleType + ' app root: ' + relRoot);
 
-            } else {
-              requireJSTargets['t' + idx] = target;
-            }
-          });
+          if (moduleType === 'commonjs') {
+            browserifyTargets['t' + idx] = target;
 
-          return targets;
+          } else if (moduleType === 'amd') {
+            requireJSTargets['t' + idx] = target;
+          }
         });
-    });
-}
+
+        // Compile all targets into one
+        if (! utils.isEmptyObject(browserifyTargets)) {
+          allTargets.browserify = {};
+          utils.shallowExtend(allTargets.browserify, browserifyTargets);
+          libs.push('grunt-browserify');
+        }
+
+        if (! utils.isEmptyObject(requireJSTargets)) {
+          allTargets.requirejs = {};
+          utils.shallowExtend(allTargets.requirejs, requireJSTargets);
+          libs.push('grunt-contrib-requirejs');
+        }
+
+        return {
+          lib: libs,
+          target: allTargets
+        };
+      });
+  });
 
 // Promisified app-root
-function getRoots() {
-  var gr = require('app-root');
-
+function getRoots(directory) {
   var deferred = q.defer(),
       options = {
-        ignore: utils.ignoredDirs
+        ignoreDirectories: utils.ignoredDirs,
+        // Don't want a config for the bundle
+        ignoreFiles: ['Gruntfile.js', 'bundle.js']
       };
 
-  gr(process.argv[2] || '.', options, function (roots) {
+  gr(directory, options, function (roots) {
     deferred.resolve(roots);
   });
 
@@ -51,8 +73,6 @@ function getRoots() {
 
 // Promsified module-definition
 function getModuleType (file) {
-  var gmt = require('module-definition');
-
   var deferred = q.defer();
 
   gmt(file, function (moduleType) {
@@ -63,7 +83,7 @@ function getModuleType (file) {
 }
 
 function getTargetForRoot(root, moduleType) {
-  var outExt = '.bundle.js';
+  var fileName = 'bundle.js';
 
   switch(moduleType) {
     case 'commonjs':
@@ -71,44 +91,17 @@ function getTargetForRoot(root, moduleType) {
         // Root goes here
         src: [root],
         // Dest goes here
-        dest: root + outExt
+        dest: fileName
       };
     case 'amd':
       return {
         // Root goes here
         mainConfigFile: root,
         // Dest goes here
-        out: root + outExt
+        out: fileName
       };
   }
 }
-
-// Target should be the browserify or r.js configuration
-var browserifySettings = {
-  targetName: 'browserify',
-  lib: 'grunt-browserify',
-  target: {
-    dist: {
-      // Root goes here
-      src: [],
-      // Dest goes here
-      dest: ''
-    }
-  }
-},
-
-requirejsSettings = {
-  targetName: 'requirejs',
-  lib: 'grunt-contrib-requirejs',
-  target: {
-    dist: {
-      // Root goes here
-      mainConfigFile: '',
-      // Dest goes here
-      out: ''
-    }
-  }
-};
 
 // On the addition of the .js extension (the first time you create a JS file) config will be empty
 

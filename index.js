@@ -157,27 +157,17 @@ Ya.prototype.isExtensionAlreadyProcessed = function (ext) {
   return this.extensions.indexOf(ext) !== -1;
 };
 
-// Returns the grunt configuration for the given preprocessor extension
-// Note: Assumes the extension is supported
+// Installs all library dependencies for that extension
+// and resolves with the build engine configuration settings
+// Precond: ext is a supported extension (i.e., has settings)
 Ya.prototype.processExtension = function (ext) {
-  var settings;
-
   return this.getExtensionSettings(ext)
-    .then(function (extSettings) {
-      // Cache for later chains
-      settings = extSettings;
-      return npmh.isLibInstalled(settings.lib);
-    })
-    .then(function (isInstalled) {
-      if (isInstalled) {
-        console.log(settings.lib + ' already installed');
-        return settings;
-      }
+    .then(function (settings) {
+      // A preprocessor can require multiple libraries installed
+      var libs = settings.lib instanceof Array ? settings.lib : [settings.lib];
 
-      return npmh.installLib(settings.lib)
+      return q.all(libs.map(npmh.installIfNecessary.bind(npmh)))
         .then(function () {
-          console.log(settings.lib + ' installed');
-          // Add to the config, a grunt target for that extension
           return settings;
         });
     });
