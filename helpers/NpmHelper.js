@@ -7,7 +7,7 @@ var q = require('q'),
 // installing, if missing
 module.exports.installIfNecessary = function (lib) {
   return this.isLibInstalled(lib)
-    .when(function (isInstalled) {
+    .then(function (isInstalled) {
       if (isInstalled) return;
 
       return this.installLib(lib)
@@ -21,10 +21,11 @@ module.exports.installIfNecessary = function (lib) {
 
 // A library/module is already installed if its folder exists
 // within node_modules
-// TODO: Why not just use require.resolve?
 module.exports.isLibInstalled = function (lib) {
   var installDir = './node_modules/' + lib,
       deferred = q.defer();
+
+  if (! lib) throw new Error('trying to install an undefined lib');
 
   fs.exists(installDir, function (exists) {
     deferred.resolve(exists);
