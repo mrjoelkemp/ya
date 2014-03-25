@@ -178,7 +178,13 @@ Ya.prototype.processExtension = function (ext) {
 ///////////////
 
 function installDependencies() {
-  var dependencies = ['grunt', 'grunt-cli', 'load-grunt-tasks', 'grunt-contrib-watch'];
+  var dependencies = [
+    'grunt',
+    'grunt-cli',
+    'load-grunt-tasks',
+    'grunt-contrib-watch',
+    'grunt-newer'
+  ];
 
   return q.all(dependencies.map(npmh.isLibInstalled))
     .then(function (results) {

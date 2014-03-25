@@ -58,6 +58,17 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
   Object.keys(gruntConfig).forEach(function (target, idx) {
     var currentExt = extensions[idx];
 
+    // TODO: This should likely be a per-extension setting config
+    var extShouldUseNewer = [
+      '.scss',
+      '.slim',
+      '.less',
+      '.styl',
+      '.jsx',
+      '.coffee',
+      '.jade'
+    ];
+
     watchConfig[target] = {
       files: ['**/*' + currentExt].concat(this.getIgnoredDirectories(currentExt)),
       // Execute the compile task for the given extension (its target name)
@@ -66,6 +77,11 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
 
     // Special case to avoid watching the js bundle
     if (currentExt === '.js') watchConfig[target].files.push('!bundle.js');
+
+    // Use grunt-newer
+    if (extShouldUseNewer.indexOf(currentExt) !== -1) {
+      watchConfig[target].tasks[0] = 'newer:' + target;
+    }
 
   }.bind(this));
 
