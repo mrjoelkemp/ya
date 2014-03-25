@@ -38,5 +38,5 @@ module.exports.shallowExtend = function (obj1, obj2) {
 };
 
 module.exports.isEmptyObject = function (obj1) {
-  return !! Object.keys(obj1).length;
+  return ! Object.keys(obj1).length;
 };
