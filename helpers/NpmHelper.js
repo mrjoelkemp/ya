@@ -10,7 +10,12 @@ module.exports.installIfNecessary = function (lib) {
     .when(function (isInstalled) {
       if (isInstalled) return;
 
-      return this.installLib(lib);
+      return this.installLib(lib)
+        .then(function () {
+          console.log(lib + ' was installed');
+        }, function () {
+          console.log(lib + ' could not be installed');
+        });
     }.bind(this));
 };
 

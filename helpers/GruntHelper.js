@@ -18,7 +18,7 @@ util.inherits(module.exports, EventEmitter);
 // Note: We need the raw extensions passed in since the targets
 //    could names aren't always indicative of the extension (ex: sass)
 module.exports.prototype.getConfig = function (targets, extensions) {
-  var compileConfig = this.getCompileConfig(targets, extensions),
+  var compileConfig = this.getCompileConfig(targets),
       watchConfig   = this.getWatchConfig(compileConfig, extensions);
 
   return watchConfig;
@@ -26,19 +26,18 @@ module.exports.prototype.getConfig = function (targets, extensions) {
 
 // Precond: targets is a list of target/object definitions for each
 // supported preprocessor
-module.exports.prototype.getCompileConfig = function (targets, extensions) {
+module.exports.prototype.getCompileConfig = function (targets) {
   var gruntConfig = {};
 
   // Merge all of the configurations with the target name
   // being the preprocessor extension, without the leading period
-  targets.forEach(function (target, idx) {
-    var curExt    = extensions[idx],
-        extension = curExt[0] === '.' ? curExt.slice(1) : curExt;
+  targets.forEach(function (target) {
+    // Merge gruntConfig with target
+    for (var key in target.target) {
+      gruntConfig[key] = target.target[key];
+    }
 
-    // Use the alternate name for special cases
-    gruntConfig[target.targetName || extension] = target.target;
-
-  }.bind(this));
+  });
 
   return gruntConfig;
 };

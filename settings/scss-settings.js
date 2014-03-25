@@ -6,12 +6,13 @@ var q = require('q'),
 var
   compassSettings = {
     lib: 'grunt-contrib-compass',
-    targetName: 'compass',
     target: {
-      dist: {
-        options: {
-          sassDir: '.',
-          cssDir:  '.'
+      compass: {
+        dist: {
+          options: {
+            sassDir: '.',
+            cssDir:  '.'
+          }
         }
       }
     }
@@ -19,14 +20,15 @@ var
 
   sassSettings = {
     lib: 'grunt-contrib-sass',
-    targetName: 'sass',
     target: {
-      dist: {
-        files: [{
-          expand: true,
-          src: ['**/*.{scss, sass}', '!node_modules/**/*.{scss, sass}'],
-          ext: '.css'
-        }]
+      sass: {
+        dist: {
+          files: [{
+            expand: true,
+            src: ['**/*.{scss, sass}', '!node_modules/**/*.{scss, sass}'],
+            ext: '.css'
+          }]
+        }
       }
     }
   };
@@ -62,8 +64,8 @@ isCompassInstalled()
       wasCompassCreate().then(function (wasGenenerated) {
         // Use the sass/ and stylesheets/ folders
         if (wasGenenerated) {
-          compassSettings.target.dist.options.sassDir = 'sass';
-          compassSettings.target.dist.options.cssDir  = 'stylesheets';
+          compassSettings.target.compass.dist.options.sassDir = 'sass';
+          compassSettings.target.compass.dist.options.cssDir  = 'stylesheets';
         }
 
         deferred.resolve(compassSettings);
