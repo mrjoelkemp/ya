@@ -201,9 +201,11 @@ function installDependencies() {
 
 // Returns all extensions found in the current directory
 function getUniqueExtensions() {
-  // Grab list of extensions used in the supplied directory
-  // TODO: If async version is needed, return promise that resolves with list
-  return gux(this.directory, utils.ignoredDirs);
+  return gux({
+    path:            this.directory,
+    exclusions:      utils.ignoredDirs,
+    includeDotFiles: true
+  });
 }
 
 // Returns a system-supported subset of the given list

@@ -20,7 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "q": "~1.0.0",
-    "node-unique-extensions": "~2.1.0",
+    "node-unique-extensions": "^2.2.0",
     "app-root": "^1.2.2"
   },
   "bin": {

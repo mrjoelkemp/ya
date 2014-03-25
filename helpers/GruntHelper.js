@@ -66,7 +66,8 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
       '.styl',
       '.jsx',
       '.coffee',
-      '.jade'
+      '.jade',
+      '.jshintrc'
     ];
 
     watchConfig[target] = {

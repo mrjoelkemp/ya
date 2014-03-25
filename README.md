@@ -114,6 +114,13 @@ new `-settings.js` files in `ya/settings/` and adding the details about the
 grunt plugin that should be used for compiling that preprocessor.
 
 
+### New Features
+
+*Features have not been included in npm published version. Formal documentation soon*
+
+* JSHinting
+* Auto-generates Browserify configuration and creates `bundle.js` in the root
+
 ### Changelog
 
 * v0.3.0 Added JSX Support
