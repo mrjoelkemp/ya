@@ -28,3 +28,15 @@ module.exports.exists = function (path) {
 
   return deferred.promise;
 };
+
+module.exports.shallowExtend = function (obj1, obj2) {
+  for (var key in obj2) {
+    if (obj2.hasOwnProperty(key)) {
+      obj1[key] = obj2[key];
+    }
+  }
+};
+
+module.exports.isEmptyObject = function (obj1) {
+  return !! Object.keys(obj1).length;
+};
