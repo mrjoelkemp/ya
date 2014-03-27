@@ -21,7 +21,8 @@
   "dependencies": {
     "q": "~1.0.0",
     "node-unique-extensions": "^2.2.0",
-    "app-root": "^1.2.2"
+    "app-root": "^1.2.3",
+    "module-definition": "^1.0.3"
   },
   "bin": {
     "ya": "bin/ya.js"
