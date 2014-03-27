@@ -1,9 +1,8 @@
 var q = require('q'),
-    npmh  = require('../helpers/NpmHelper'),
     utils = require('../helpers/Utils'),
     gr    = require('app-root'),
     gmt   = require('module-definition'),
-    path = require('path');
+    path  = require('path');
 
 // Generate browserify/requirejs configurations based on
 // the root files in the managed directory
@@ -61,7 +60,7 @@ function getRoots(directory) {
       options = {
         ignoreDirectories: utils.ignoredDirs,
         // Don't want a config for the bundle
-        ignoreFiles: ['Gruntfile.js', 'bundle.js']
+        ignoreFiles: ['Gruntfile.js', /.*(-bundle.js)/]
       };
 
   gr(directory, options, function (roots) {
@@ -82,8 +81,11 @@ function getModuleType (file) {
   return deferred.promise;
 }
 
+// TODO: If two roots of the same type have the same name
+// within different dirs they'll overwrite each other
 function getTargetForRoot(root, moduleType) {
-  var fileName = 'bundle.js';
+  var fileName = path.basename(root, '.js'),
+      ext = '-bundle.js';
 
   switch(moduleType) {
     case 'commonjs':
@@ -91,14 +93,17 @@ function getTargetForRoot(root, moduleType) {
         // Root goes here
         src: [root],
         // Dest goes here
-        dest: fileName
+        dest: fileName + '-b' + ext
       };
     case 'amd':
       return {
-        // Root goes here
-        mainConfigFile: root,
-        // Dest goes here
-        out: fileName
+        options: {
+          baseUrl:  directory,
+          out:      fileName + '-r' + ext,
+          include:  root,
+          wrap:     true,
+          optimize: 'none'
+        }
       };
   }
 }
