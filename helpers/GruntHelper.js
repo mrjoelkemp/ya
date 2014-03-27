@@ -77,7 +77,7 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
     };
 
     // Special case to avoid watching the js bundle
-    if (currentExt === '.js') watchConfig[target].files.push('!bundle.js');
+    if (currentExt === '.js') watchConfig[target].files.push('!*.bundle.js');
 
     // Use grunt-newer
     if (extShouldUseNewer.indexOf(currentExt) !== -1) {
