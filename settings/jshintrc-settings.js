@@ -1,11 +1,16 @@
+var utils = require('../helpers/Utils');
+
 module.exports.lib = 'grunt-contrib-jshint';
 module.exports.target = {
   jshint: {
     options: {
-      jshintrc: '.jshintrc'
+      jshintrc: '.jshintrc',
+      ignores: utils.ignoredDirs,
+      // Don't fail the task
+      force: true
     },
-    all: {
-      src: '**/*.js'
-    }
+    all: ['**/*.js'].concat(utils.ignoredDirs.map(function (ignore) {
+      return '!' + ignore + '/**/*';
+    }))
   }
 };
