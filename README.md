@@ -119,7 +119,8 @@ grunt plugin that should be used for compiling that preprocessor.
 *Features have not been included in npm published version. Formal documentation soon*
 
 * JSHinting
-* Auto-generates Browserify configuration and creates `bundle.js` in the root
+* Auto-generates Browserify configuration and creates `*-b-bundle.js` in the working directory
+* Auto-generates RequireJS' r.js configuration and creates a `*-r-bundle.js` file in the working directory
 
 ### Changelog
 
