@@ -4,14 +4,25 @@
 
 ### Motivation
 
-Tools like Grunt and Gulp are good for large applications. However, for smaller projects,
-we shouldn't have to waste time defining configuration files or build scripts.
-Our tools should do that for us – downloading any dependencies and
-recompiling changes along the way.
+We shouldn't have to waste time defining and maintaining Grunt/Gulp/Broccoli configuration
+files or build scripts. Our tools should do that for us.
 
-YA is that tool. It manages Grunt behind the scenes and auto-generates your Gruntfile.
+YA is that tool. It manages Grunt behind the scenes to auto-generate and maintain your Gruntfile –
+downloading any dependencies and recompiling changes along the way.
 
 `npm install ya.js`
+
+### Disclaimer
+
+YA's current, npm-published (i.e., stable) version only allows you to use [supported preprocessors](#preprocessors-supported) with zero-configuration.
+
+The next version of YA will manage your JavaScript build process for you –
+auto-generating your Browserify or RequireJS Grunt configuration by traversing
+the dependency graph of your JavaScript application.
+
+Currently, YA uses Grunt as its build engine for prototyping purposes.
+
+The ultimate goal for YA is zero-configuration for all front-end development needs.
 
 ### Usage
 
@@ -77,15 +88,6 @@ and other common build processes.
 * YA will run `grunt watch` to watch for new preprocessors being used and for file changes
 
 **Note: If you have an existing Gruntfile, YA will overwrite it.**
-
-### Why should you use YA?
-
-If you just need to build something quickly and don't want to waste time
-maintaining a build script (like a Gruntfile or Gulpfile), then YA shines.
-
-YA is not a tool for large-scale application development, but allows you
-to use Grunt to take over where YA leaves off. YA sacrifices extensibility
-for ease of use.
 
 ### Preprocessors Supported
 
