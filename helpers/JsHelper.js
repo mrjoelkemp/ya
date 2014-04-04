@@ -19,10 +19,13 @@ module.exports = JSH;
 // apps in the working directory
 JSH.prototype.getSettings = function () {
   var that = this;
+
   return this.getRoots().then(function (roots) {
-    console.log('Fetched roots', roots)
+    console.log('JSH: Fetched roots')
     return q.all(roots.map(that.getModuleType.bind(that)))
       .then(function (moduleTypes) {
+        console.log('JSH: Fetched module types')
+
         return that.generateSettings(roots, moduleTypes);
       });
   });
@@ -92,7 +95,7 @@ JSH.prototype.getRoots = function () {
       options = {
         ignoreDirectories: utils.ignoredDirs,
         // Don't want a config for the bundle
-        ignoreFiles: ['Gruntfile.js', /.*(-bundle.js)/]
+        ignoreFiles: ['Gruntfile.js', /.*bundle.js/]
       };
 
   getRoots(this.directory, options, function (roots) {

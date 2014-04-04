@@ -11,17 +11,21 @@ function Ya () {
 }
 
 Ya.prototype.init = function (directory) {
+  var that = this;
+
   this.directory = directory || this.directory;
 
   this.grunt = new GruntHelper(this.directory);
-  this.grunt.on('added', this.onAddedExtensions.bind(this));
+  this.grunt.on('added', onAddedExtensions.bind(this));
+
+  this.grunt.on('jsChanged', onJSChanged.bind(this));
 
   npmh.hasPackageJsonFile(this.directory)
     .then(function (hasFile) {
       if (! hasFile) {
-        return npmh.createEmptyPackageJsonFile(this.directory);
+        return npmh.createEmptyPackageJsonFile(that.directory);
       }
-    }.bind(this))
+    })
     .then(installDependencies)
     .then(getUniqueExtensions.bind(this))
     .then(getSupportedExtensions.bind(this))
@@ -29,45 +33,45 @@ Ya.prototype.init = function (directory) {
     .then(function (exts) {
       if (exts.length) {
         console.log('Supported extensions found: ', exts);
-        this.extensions = exts;
+        that.extensions = exts;
       }
 
       return exts;
-    }.bind(this))
+    })
 
     .then(processSupportedExtensions.bind(this))
 
     .then(function (targets) {
-      this.processedPromises = targets;
+      that.processedPromises = targets;
       return targets;
-    }.bind(this))
+    })
 
     .then(function (targets) {
-      var config = this.grunt.getConfig(targets, this.extensions);
+      var config = that.grunt.getConfig(targets, that.extensions);
 
       console.log('Grunt configuration generated');
 
       return config;
-    }.bind(this))
+    })
 
     .then(function (config) {
-      return this.grunt.flushConfig(config)
+      return that.grunt.flushConfig(config)
         .then(function () {
-          console.log('Gruntfile.js saved to ' + this.directory);
+          console.log('Gruntfile.js saved to ' + that.directory);
           return config;
-        }.bind(this));
-    }.bind(this))
+        });
+    })
 
     .then(function (config) {
-      return this.grunt.compileTasks(config)
+      return that.grunt.compileTasks(config)
         .then(function () {
-          console.log('Compiled existing files in ' + this.directory);
-        }.bind(this));
-    }.bind(this))
+          console.log('Compiled existing files in ' + that.directory);
+        });
+    })
 
     .done(function () {
-      this.grunt.watch();
-    }.bind(this));
+      that.grunt.watch();
+    });
 };
 
 // An extension is supported if we have a settings file for it
@@ -110,30 +114,11 @@ Ya.prototype.getExtensionSettings = function (ext) {
     }.bind(this));
 };
 
-// Flow for handling yet another extension on file addition
-// Note: Assumes the extension is new and system-supported
-Ya.prototype.onAddedExtensions = function (extensions) {
-  console.log('Detected the following additions: ', extensions);
-
-  extensions.forEach(function (ext) {
-
-    if (this.isExtensionAlreadyProcessed(ext)) return;
-
-    this.isExtensionSupported(ext).done(function (isSupported) {
-      if (! isSupported) return;
-
-      this.processAdditionalExtension(ext);
-
-    }.bind(this));
-
-  }.bind(this));
-};
-
 Ya.prototype.processAdditionalExtension = function (ext) {
   this.extensions.push(ext);
   this.processedPromises.push(this.processExtension(ext));
 
-  return q.all(this.processedPromises)
+  return this.getProcessedTargets()
     .then(function (targets) {
       return this.grunt.getConfig(targets, this.extensions);
     }.bind(this))
@@ -151,6 +136,10 @@ Ya.prototype.processAdditionalExtension = function (ext) {
     }.bind(this))
 
     .done();
+};
+
+Ya.prototype.getProcessedTargets = function () {
+  return q.all(this.processedPromises);
 };
 
 Ya.prototype.isExtensionAlreadyProcessed = function (ext) {
@@ -174,6 +163,83 @@ Ya.prototype.processExtension = function (ext) {
 };
 
 ///////////////
+// Listeners
+///////////////
+
+// Flow for handling yet another extension on file addition
+// Note: Assumes the extension is new and system-supported
+function onAddedExtensions (extensions) {
+  console.log('Detected the following additions: ', extensions);
+
+  extensions.forEach(function (ext) {
+
+    if (this.isExtensionAlreadyProcessed(ext)) return;
+
+    this.isExtensionSupported(ext).done(function (isSupported) {
+      if (! isSupported) return;
+
+      this.processAdditionalExtension(ext);
+
+    }.bind(this));
+
+  }.bind(this));
+}
+
+// When to change/generate the grunt configuration
+function onJSChanged(filepath) {
+  if (typeof this.jsh === 'undefined') {
+    var JSH = require('./helpers/JsHelper');
+    this.jsh = new JSH(this.directory);
+  }
+
+  // if (this.emanager.shouldIgnore(filepath)) return;
+
+  var that = this;
+  // Cases to recompute:
+  //    a root file changes: index.js could remove require of lib/index making index.js a root and lib/index a root
+  //    a non-root file changes: b.js is the root and a.js changes to require b.js making it the new root
+  return this.jsh.getRoots().then(function (roots) {
+    console.log('Pulled roots', roots)
+    console.log('old roots: ', that.jsh._oldRoots)
+    return that.jsh.haveRootsChanged(roots);
+  })
+  .then(function (haveRootsChanged) {
+    console.log('Roots changed? ', haveRootsChanged)
+    if (! haveRootsChanged) {
+      console.log('roots haven\'t changed');
+      return;
+    }
+    // Need all of the targets to regenerate the gruntfile
+    return that.getProcessedTargets().then(function (targets) {
+      console.log('Getting config')
+      return that.grunt.getConfig(targets, that.extensions);
+    })
+    .then(function (config) {
+      // Grab the targets for the apps and merge with the existing targets
+      return that.jsh.getSettings().then(function (settings) {
+        console.log('JS Settings: ', settings)
+        console.log('JS Settings Target: ', settings.target)
+
+        utils.shallowExtend(config, settings.target);
+
+        console.log('Extended Config: ', config)
+        return config;
+      });
+    })
+    .then(function (config) {
+      console.log('Config: ', config)
+      return that.grunt.flushConfig(config)
+        .then(function () {
+          return that.grunt.compileTasks(config);
+        });
+    })
+    // .done(function () {
+    //   that.grunt.watch();
+    // });
+  });
+}
+
+///////////////
 // Helpers
 ///////////////
 
@@ -193,7 +259,11 @@ function installDependencies() {
         return ! results[idx];
       });
 
-      if (notInstalled.length) console.log('Installing: ', notInstalled);
+      if (notInstalled.length) {
+        notInstalled.map(function (ni) {
+          console.log('Installing: ', ni);
+        });
+      }
 
       return q.all(notInstalled.map(npmh.installLib));
     });
