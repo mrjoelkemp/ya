@@ -40,3 +40,13 @@ module.exports.shallowExtend = function (obj1, obj2) {
 module.exports.isEmptyObject = function (obj1) {
   return ! Object.keys(obj1).length;
 };
+
+module.exports.areArraysEqual = function (arr1, arr2) {
+  if (arr1.length !== arr2.length) return false;
+
+  for (var i = 0, l = arr1.length; i < l; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+};
