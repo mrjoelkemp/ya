@@ -268,7 +268,7 @@ function getFilesAdded(output) {
 }
 
 function getJSFilesChanged(output) {
-  return getMatches(output, /(JSCHANGED:)(\.+)/g);
+  return getMatches(output, /(JSCHANGED:)(.+)/g);
 }
 
 // Returns a list of pattern matches against the source string
@@ -299,6 +299,20 @@ module.exports.prototype.rewatch = function () {
   } else {
     cb();
   }
+};
+
+module.exports.prototype.stopWatching = function () {
+  var that = this,
+      deferred = q.defer();
+
+  this.watchChild.on('close', function () {
+    that.watchChild = null;
+    deferred.resolve();
+  });
+
+  this.watchChild.kill('SIGHUP');
+
+  return deferred.promise;
 };
 
 // Triggers the compile tasks to precompile any existing files
