@@ -146,7 +146,8 @@ module.exports.prototype.flushConfig = function (config) {
 // a gruntfile definition
 function generateGruntfile (generatedConfig) {
   return function(grunt) {
-    var path = require('path');
+    var path = require('path'),
+        fs = require('fs');
 
     require('load-grunt-tasks')(grunt);
 
@@ -161,7 +162,7 @@ function generateGruntfile (generatedConfig) {
       var ext = path.extname(filepath);
 
       // Ignore directories
-      if (! ext) return;
+      if (fs.lstatSync(filepath).isDirectory()) return;
 
       // This is a special message that's parsed by Mule
       // to determine if support for an additional preprocessor is necessary
