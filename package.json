@@ -21,7 +21,7 @@
   "dependencies": {
     "q": "~1.0.0",
     "node-unique-extensions": "^2.2.0",
-    "app-root": "^1.2.3",
+    "app-root": "^1.2.6",
     "module-definition": "^1.0.3"
   },
   "bin": {
