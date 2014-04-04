@@ -77,7 +77,7 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
     };
 
     // Special case to avoid watching the js bundle
-    if (currentExt === '.js') watchConfig[target].files.push('!*.bundle.js');
+    if (currentExt === '.js') watchConfig[target].files.push('!*bundle.js');
 
     // Use grunt-newer
     if (extShouldUseNewer.indexOf(currentExt) !== -1) {
@@ -157,17 +157,30 @@ function generateGruntfile (generatedConfig) {
 
     // Handle new files with that have a new, supported preprocessor
     grunt.event.on('watch', function(action, filepath) {
-      if (action !== 'added') return;
-
       var ext = path.extname(filepath);
 
       // Ignore directories
       if (fs.lstatSync(filepath).isDirectory()) return;
 
-      // This is a special message that's parsed by Mule
-      // to determine if support for an additional preprocessor is necessary
-      // Note: this allows us to avoid controlling grunt manually within Mule
-      console.log('EXTADDED:' + ext);
+      if (action === 'added') {
+        // This is a special message that's parsed by Mule
+        // to determine if support for an additional preprocessor is necessary
+        // Note: this allows us to avoid controlling grunt manually within Mule
+        console.log('EXTADDED:' + ext);
+
+      // Note: we don't do anything for newly added .js files
+      // A new js file can't be the root unless it's changed to require
+      // the current root and saved/changed
+      } else if (action === 'changed' || action === 'deleted') {
+        if (ext === '.js') {
+          // Ignore bundles
+          if (/.+bundle.js/g.test(filepath)) return;
+
+          // Notify YA to recompute the roots and
+          // generate a configuration
+          console.log('JSCHANGED:' + filepath);
+        }
+      }
     });
 
     // For watching entire directories but allowing
@@ -218,29 +231,29 @@ module.exports.prototype.watch = function () {
     console.log(stdout);
 
     if (err) {
+      console.log('Watch error: ', err);
       d.reject(err);
     } else {
+      console.log('Watch success');
       d.resolve();
     }
   });
 
+  // Scrapes the output of the child
+  // and emits events based on file additions/changes
   child.stdout.on('data', function(data) {
-    // Check for the extension added flag
-    var pattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
-        matches = [],
-        match;
+    var addedFiles = getFilesAdded(data),
+        changedJSFiles = getJSFilesChanged(data);
 
-    // Grab all added extensions
-    while (match = pattern.exec(data)) {
-      matches.push(match[2]);
+    if (addedFiles.length) {
+      this.emit('added', addedFiles);
     }
 
-    if (matches.length) {
-      this.emit('added', matches);
+    if (changedJSFiles.length) {
+      this.emit('jsChanged', changedJSFiles);
     }
 
-    // Remove the flag from the output
-    console.log(data.replace(pattern, ''));
+    console.log(data);
 
   }.bind(this));
 
@@ -248,6 +261,28 @@ module.exports.prototype.watch = function () {
 
   return d.promise;
 };
+
+function getFilesAdded(output) {
+  // Check for the extension added flag
+  return getMatches(output, /(EXTADDED:)(\.[a-zA-Z]+)/g);
+}
+
+function getJSFilesChanged(output) {
+  return getMatches(output, /(JSCHANGED:)(\.+)/g);
+}
+
+// Returns a list of pattern matches against the source string
+function getMatches(source, pattern) {
+  var matches = [],
+      match;
+
+  // Grab all added extensions
+  while (match = pattern.exec(source)) {
+    matches.push(match[2]);
+  }
+
+  return matches;
+}
 
 // Restarts the existing watch process
 module.exports.prototype.rewatch = function () {
