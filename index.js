@@ -17,7 +17,6 @@ Ya.prototype.init = function (directory) {
 
   this.engine = new GruntHelper(this.directory);
   this.engine.on('added', onAddedExtensions.bind(this));
-
   this.engine.on('jsChanged', onJSChanged.bind(this));
 
   npmh.hasPackageJsonFile(this.directory)
@@ -43,18 +42,12 @@ Ya.prototype.init = function (directory) {
 
   .then(function (targets) {
     that.processedPromises = targets;
-    return targets;
-  })
-
-  .then(function (targets) {
-    var config = that.engine.getConfig(targets, that.extensions);
-
-    console.log('Grunt configuration generated');
-
-    return config;
+    return that._generateConfig();
   })
 
   .then(function (config) {
+    console.log('Grunt configuration generated');
+
     return that.engine.flushConfig(config)
       .then(function () {
         console.log('Gruntfile.js saved to ' + that.directory);
@@ -117,31 +110,24 @@ Ya.prototype.getExtensionSettings = function (ext) {
 // Adds the new extension to the processing pipeline and regenerates
 // the build engine configuration
 Ya.prototype.processAdditionalExtension = function (ext) {
+  var that = this;
+
   this.extensions.push(ext);
   this.processedPromises.push(this.processExtension(ext));
 
-  return this._getProcessedTargets()
-    .then(function (targets) {
-      return this.engine.getConfig(targets, this.extensions);
-    }.bind(this))
-
+  return this._generateConfig()
     .then(function (config) {
-
-      return this.engine.flushConfig(config)
+      return that.engine.flushConfig(config)
         .then(function () {
-          return this.engine.compileTasks(config);
-        }.bind(this));
-    }.bind(this))
+          return that.engine.compileTasks(config);
+        });
+    })
 
     .then(function () {
-      this.engine.rewatch();
-    }.bind(this))
+      that.engine.rewatch();
+    })
 
     .done();
-};
-
-Ya.prototype._getProcessedTargets = function () {
-  return q.all(this.processedPromises);
 };
 
 Ya.prototype.isExtensionAlreadyProcessed = function (ext) {
@@ -162,6 +148,17 @@ Ya.prototype.processExtension = function (ext) {
           return settings;
         });
     });
+};
+
+Ya.prototype._generateConfig = function () {
+  return this._getProcessedTargets()
+    .then(function (targets) {
+      return this.engine.getConfig(targets, this.extensions);
+    }.bind(this));
+};
+
+Ya.prototype._getProcessedTargets = function () {
+  return q.all(this.processedPromises);
 };
 
 ///////////////
@@ -188,56 +185,53 @@ function onAddedExtensions (extensions) {
 }
 
 // When to change/generate the grunt configuration
-function onJSChanged(filepath) {
+function onJSChanged() {
   if (typeof this.jsh === 'undefined') {
     var JSH = require('./helpers/JsHelper');
     this.jsh = new JSH(this.directory);
   }
-
-  // if (this.emanager.shouldIgnore(filepath)) return;
 
   var that = this;
   // Cases to recompute:
   //    a root file changes: index.js could remove require of lib/index making index.js a root and lib/index a root
   //    a non-root file changes: b.js is the root and a.js changes to require b.js making it the new root
   return this.jsh.getRoots().then(function (roots) {
-    console.log('Pulled roots', roots)
-    console.log('old roots: ', that.jsh._oldRoots)
+    // console.log('Pulled roots', roots, '\nold roots: ', that.jsh._oldRoots)
     return that.jsh.haveRootsChanged(roots);
   })
   .then(function (haveRootsChanged) {
-    console.log('Roots changed? ', haveRootsChanged)
+
     if (! haveRootsChanged) {
       console.log('roots haven\'t changed');
       return;
     }
+
+    console.log('An app root has changed');
+
     // Need all of the targets to regenerate the gruntfile
     return that._getProcessedTargets().then(function (targets) {
-      console.log('Getting config')
+      // console.log('Getting config')
       return that.engine.getConfig(targets, that.extensions);
     })
     .then(function (config) {
       // Grab the targets for the apps and merge with the existing targets
       return that.jsh.getSettings().then(function (settings) {
-        console.log('JS Settings: ', settings)
-        console.log('JS Settings Target: ', settings.target)
+        // console.log('JS Settings: ', settings)
+        // console.log('JS Settings Target: ', settings.target)
 
         utils.shallowExtend(config, settings.target);
 
-        console.log('Extended Config: ', config)
+        // console.log('Extended Config: ', config)
         return config;
       });
     })
     .then(function (config) {
-      console.log('Config: ', config)
+      // console.log('Config: ', config)
       return that.engine.flushConfig(config)
         .then(function () {
           return that.engine.compileTasks(config);
         });
-    })
-    // .done(function () {
-    //   that.engine.watch();
-    // });
+    });
   });
 }
 
