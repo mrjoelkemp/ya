@@ -19,7 +19,7 @@ Ya.prototype.init = function (directory) {
   this.engine.on('added', onAddedExtensions.bind(this));
   this.engine.on('jsChanged', onJSChanged.bind(this));
 
-  npmh.hasPackageJsonFile(this.directory)
+  return npmh.hasPackageJsonFile(this.directory)
   .then(function (hasFile) {
     if (! hasFile) {
       return npmh.createEmptyPackageJsonFile(that.directory);
@@ -60,11 +60,11 @@ Ya.prototype.init = function (directory) {
       .then(function () {
         console.log('Compiled existing files in ' + that.directory);
       });
-  })
-
-  .done(function () {
-    that.engine.watch();
   });
+};
+
+Ya.prototype.watch = function () {
+  this.engine.watch();
 };
 
 // An extension is supported if we have a settings file for it
