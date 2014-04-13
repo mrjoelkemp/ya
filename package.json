@@ -4,7 +4,7 @@
   "description": "Use your favorite preprocessors without the hassle of configuration",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
@@ -16,9 +16,6 @@
     "process",
     "automation"
   ],
-  "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
-  },
   "author": "Joel Kemp <joel@mrjoelkemp.com>",
   "license": "MIT",
   "dependencies": {
@@ -32,6 +29,12 @@
   },
   "devDependencies": {
     "mocha": "^1.18.2",
-    "expect.js": "^0.3.1"
+    "expect.js": "^0.3.1",
+    "temporary": "0.0.8",
+    "grunt": "^0.4.4",
+    "grunt-cli": "^0.1.13",
+    "load-grunt-tasks": "^0.4.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-newer": "^0.7.0"
   }
 }
