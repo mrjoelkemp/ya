@@ -21,57 +21,57 @@ Ya.prototype.init = function (directory) {
   this.engine.on('jsChanged', onJSChanged.bind(this));
 
   npmh.hasPackageJsonFile(this.directory)
-    .then(function (hasFile) {
-      if (! hasFile) {
-        return npmh.createEmptyPackageJsonFile(that.directory);
-      }
-    })
-    .then(installDependencies)
-    .then(getUniqueExtensions.bind(this))
-    .then(getSupportedExtensions.bind(this))
+  .then(function (hasFile) {
+    if (! hasFile) {
+      return npmh.createEmptyPackageJsonFile(that.directory);
+    }
+  })
+  .then(installDependencies)
+  .then(getUniqueExtensions.bind(this))
+  .then(getSupportedExtensions.bind(this))
 
-    .then(function (exts) {
-      if (exts.length) {
-        console.log('Supported extensions found: ', exts);
-        that.extensions = exts;
-      }
+  .then(function (exts) {
+    if (exts.length) {
+      console.log('Supported extensions found: ', exts);
+      that.extensions = exts;
+    }
 
-      return exts;
-    })
+    return exts;
+  })
 
-    .then(processSupportedExtensions.bind(this))
+  .then(processSupportedExtensions.bind(this))
 
-    .then(function (targets) {
-      that.processedPromises = targets;
-      return targets;
-    })
+  .then(function (targets) {
+    that.processedPromises = targets;
+    return targets;
+  })
 
-    .then(function (targets) {
-      var config = that.engine.getConfig(targets, that.extensions);
+  .then(function (targets) {
+    var config = that.engine.getConfig(targets, that.extensions);
 
-      console.log('Grunt configuration generated');
+    console.log('Grunt configuration generated');
 
-      return config;
-    })
+    return config;
+  })
 
-    .then(function (config) {
-      return that.engine.flushConfig(config)
-        .then(function () {
-          console.log('Gruntfile.js saved to ' + that.directory);
-          return config;
-        });
-    })
+  .then(function (config) {
+    return that.engine.flushConfig(config)
+      .then(function () {
+        console.log('Gruntfile.js saved to ' + that.directory);
+        return config;
+      });
+  })
 
-    .then(function (config) {
-      return that.engine.compileTasks(config)
-        .then(function () {
-          console.log('Compiled existing files in ' + that.directory);
-        });
-    })
+  .then(function (config) {
+    return that.engine.compileTasks(config)
+      .then(function () {
+        console.log('Compiled existing files in ' + that.directory);
+      });
+  })
 
-    .done(function () {
-      that.engine.watch();
-    });
+  .done(function () {
+    that.engine.watch();
+  });
 };
 
 // An extension is supported if we have a settings file for it
@@ -114,11 +114,13 @@ Ya.prototype.getExtensionSettings = function (ext) {
     }.bind(this));
 };
 
+// Adds the new extension to the processing pipeline and regenerates
+// the build engine configuration
 Ya.prototype.processAdditionalExtension = function (ext) {
   this.extensions.push(ext);
   this.processedPromises.push(this.processExtension(ext));
 
-  return this.getProcessedTargets()
+  return this._getProcessedTargets()
     .then(function (targets) {
       return this.engine.getConfig(targets, this.extensions);
     }.bind(this))
@@ -138,7 +140,7 @@ Ya.prototype.processAdditionalExtension = function (ext) {
     .done();
 };
 
-Ya.prototype.getProcessedTargets = function () {
+Ya.prototype._getProcessedTargets = function () {
   return q.all(this.processedPromises);
 };
 
@@ -210,7 +212,7 @@ function onJSChanged(filepath) {
       return;
     }
     // Need all of the targets to regenerate the gruntfile
-    return that.getProcessedTargets().then(function (targets) {
+    return that._getProcessedTargets().then(function (targets) {
       console.log('Getting config')
       return that.engine.getConfig(targets, that.extensions);
     })
