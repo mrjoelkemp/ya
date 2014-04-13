@@ -16,6 +16,22 @@ describe('Utils', function () {
     });
   });
 
+  describe('dotExt', function () {
+    it('returns a dot-prefixed version of the given extension', function () {
+      expect(utils.dotExt('.')).to.equal('.');
+      expect(utils.dotExt('jpg')).to.equal('.jpg');
+      expect(utils.dotExt('.jpg')).to.equal('.jpg');
+    });
+
+    it('returns an empty string if given an empty string', function () {
+      expect(utils.dotExt('')).to.equal('');
+    });
+
+    it('throws if given a non-string', function () {
+      expect(function () { utils.dotExt({ foo: 1 }) }).to.throwError();
+    });
+  });
+
   describe('exists', function() {
     it('returns a promise', function () {
       expect(utils.exists('../index.js').then).to.be.an('function');
@@ -86,5 +102,9 @@ describe('Utils', function () {
     it('throws an error if any of the arguments are non-arrays', function () {
       expect(function () { utils.areArraysEqual([1,4,3], {}) }).to.throwError();
     });
+  });
+
+  describe('bindAll', function () {
+
   });
 });
