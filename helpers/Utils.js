@@ -15,6 +15,8 @@ module.exports.ignoredDirs = [
 
 // Helper to return a slash-trailed version of the directory name
 module.exports.slashDir = function (directory) {
+  if (! directory) return '';
+
   return directory[directory.length - 1] === '/' ? directory : directory + '/';
 };
 
@@ -42,6 +44,10 @@ module.exports.isEmptyObject = function (obj1) {
 };
 
 module.exports.areArraysEqual = function (arr1, arr2) {
+  if (! (arr1 instanceof Array) || ! (arr2 instanceof Array)) {
+    throw new Error('arguments must be an array');
+  }
+
   if (arr1.length !== arr2.length) return false;
 
   for (var i = 0, l = arr1.length; i < l; i++) {
@@ -49,4 +55,6 @@ module.exports.areArraysEqual = function (arr1, arr2) {
       return false;
     }
   }
+
+  return true;
 };
