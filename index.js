@@ -15,10 +15,10 @@ Ya.prototype.init = function (directory) {
 
   this.directory = directory || this.directory;
 
-  this.grunt = new GruntHelper(this.directory);
-  this.grunt.on('added', onAddedExtensions.bind(this));
+  this.engine = new GruntHelper(this.directory);
+  this.engine.on('added', onAddedExtensions.bind(this));
 
-  this.grunt.on('jsChanged', onJSChanged.bind(this));
+  this.engine.on('jsChanged', onJSChanged.bind(this));
 
   npmh.hasPackageJsonFile(this.directory)
     .then(function (hasFile) {
@@ -47,7 +47,7 @@ Ya.prototype.init = function (directory) {
     })
 
     .then(function (targets) {
-      var config = that.grunt.getConfig(targets, that.extensions);
+      var config = that.engine.getConfig(targets, that.extensions);
 
       console.log('Grunt configuration generated');
 
@@ -55,7 +55,7 @@ Ya.prototype.init = function (directory) {
     })
 
     .then(function (config) {
-      return that.grunt.flushConfig(config)
+      return that.engine.flushConfig(config)
         .then(function () {
           console.log('Gruntfile.js saved to ' + that.directory);
           return config;
@@ -63,14 +63,14 @@ Ya.prototype.init = function (directory) {
     })
 
     .then(function (config) {
-      return that.grunt.compileTasks(config)
+      return that.engine.compileTasks(config)
         .then(function () {
           console.log('Compiled existing files in ' + that.directory);
         });
     })
 
     .done(function () {
-      that.grunt.watch();
+      that.engine.watch();
     });
 };
 
@@ -120,19 +120,19 @@ Ya.prototype.processAdditionalExtension = function (ext) {
 
   return this.getProcessedTargets()
     .then(function (targets) {
-      return this.grunt.getConfig(targets, this.extensions);
+      return this.engine.getConfig(targets, this.extensions);
     }.bind(this))
 
     .then(function (config) {
 
-      return this.grunt.flushConfig(config)
+      return this.engine.flushConfig(config)
         .then(function () {
-          return this.grunt.compileTasks(config);
+          return this.engine.compileTasks(config);
         }.bind(this));
     }.bind(this))
 
     .then(function () {
-      this.grunt.rewatch();
+      this.engine.rewatch();
     }.bind(this))
 
     .done();
@@ -212,7 +212,7 @@ function onJSChanged(filepath) {
     // Need all of the targets to regenerate the gruntfile
     return that.getProcessedTargets().then(function (targets) {
       console.log('Getting config')
-      return that.grunt.getConfig(targets, that.extensions);
+      return that.engine.getConfig(targets, that.extensions);
     })
     .then(function (config) {
       // Grab the targets for the apps and merge with the existing targets
@@ -228,13 +228,13 @@ function onJSChanged(filepath) {
     })
     .then(function (config) {
       console.log('Config: ', config)
-      return that.grunt.flushConfig(config)
+      return that.engine.flushConfig(config)
         .then(function () {
-          return that.grunt.compileTasks(config);
+          return that.engine.compileTasks(config);
         });
     })
     // .done(function () {
-    //   that.grunt.watch();
+    //   that.engine.watch();
     // });
   });
 }
