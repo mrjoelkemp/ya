@@ -5,6 +5,10 @@ var fs           = require('fs'),
     util         = require('util'),
     utils        = require('./Utils');
 
+// Patterns for detecting events occurred while watching
+var _fileAddedPattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
+    _jsChangedPattern = /(JSCHANGED:)(.+)/g;
+
 module.exports = function (directory) {
   EventEmitter.call(this);
   this.directory  = directory;
@@ -210,7 +214,7 @@ module.exports.prototype.runTask = function (taskName) {
 
   child.stdout.on('data', function(data) {
     // relay output to console
-    console.log(data);
+    console.log(prettifyGruntOutput(data));
   });
 
   return d.promise;
@@ -228,13 +232,12 @@ module.exports.prototype.watch = function () {
       child;
 
   child = exec('grunt watch', function(err, stdout) {
-    console.log(stdout);
+    console.log(prettifyGruntOutput(stdout));
 
     if (err) {
       console.log('Watch error: ', err);
       d.reject(err);
     } else {
-      console.log('Watch success');
       d.resolve();
     }
   });
@@ -247,11 +250,16 @@ module.exports.prototype.watch = function () {
 
     if (addedFiles.length) {
       this.emit('added', addedFiles);
+      // Strip out the internal events
+      data = data.replace(_fileAddedPattern, '');
     }
 
     if (changedJSFiles.length) {
       this.emit('jsChanged', changedJSFiles);
+      data = data.replace(_jsChangedPattern, '');
     }
+
+    data = prettifyGruntOutput(data);
 
     console.log(data);
 
@@ -264,11 +272,19 @@ module.exports.prototype.watch = function () {
 
 function getFilesAdded(output) {
   // Check for the extension added flag
-  return getMatches(output, /(EXTADDED:)(\.[a-zA-Z]+)/g);
+  return getMatches(output, _fileAddedPattern);
 }
 
 function getJSFilesChanged(output) {
-  return getMatches(output, /(JSCHANGED:)(.+)/g);
+  return getMatches(output, _jsChangedPattern);
+}
+
+// Series of transformations for grunt's output
+// to make it less ugly
+function prettifyGruntOutput(str) {
+  // Remove all back-to-back newlines
+  str = str.replace(/(\n|\r)*/g, '');
+  return str;
 }
 
 // Returns a list of pattern matches against the source string
