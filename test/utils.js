@@ -65,4 +65,26 @@ describe('Utils', function () {
       expect(utils.isEmptyObject({ foo: 1 })).to.not.be.ok();
     });
   });
+
+  describe('areArraysEqual', function() {
+    it('returns true if the arrays have the same length and each value at every index is the same between both arrays', function () {
+      expect(utils.areArraysEqual([1,2,3], [1,2,3])).to.be.ok();
+      expect(utils.areArraysEqual([1], [1])).to.be.ok();
+      expect(utils.areArraysEqual([], [])).to.be.ok();
+    });
+
+    it('returns false if the arrays have different lengths', function () {
+      expect(utils.areArraysEqual([1,3], [1,2,3])).to.not.be.ok();
+      expect(utils.areArraysEqual([1], [])).to.not.be.ok();
+    });
+
+    it('returns false if the arrays do not have the same values at the same index across arrays', function () {
+      expect(utils.areArraysEqual([1,4,3], [1,2,3])).to.not.be.ok();
+      expect(utils.areArraysEqual([1], [2])).to.not.be.ok();
+    });
+
+    it('throws an error if any of the arguments are non-arrays', function () {
+      expect(function () { utils.areArraysEqual([1,4,3], {}) }).to.throwError();
+    });
+  });
 });
