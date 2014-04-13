@@ -5,6 +5,10 @@ var fs           = require('fs'),
     util         = require('util'),
     utils        = require('./Utils');
 
+// Patterns for detecting events occurred while watching
+var _fileAddedPattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
+    _jsChangedPattern = /(JSCHANGED:)(.+)/g;
+
 module.exports = function (directory) {
   EventEmitter.call(this);
   this.directory  = directory;
@@ -77,7 +81,7 @@ module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
     };
 
     // Special case to avoid watching the js bundle
-    if (currentExt === '.js') watchConfig[target].files.push('!*.bundle.js');
+    if (currentExt === '.js') watchConfig[target].files.push('!*bundle.js');
 
     // Use grunt-newer
     if (extShouldUseNewer.indexOf(currentExt) !== -1) {
@@ -146,7 +150,8 @@ module.exports.prototype.flushConfig = function (config) {
 // a gruntfile definition
 function generateGruntfile (generatedConfig) {
   return function(grunt) {
-    var path = require('path');
+    var path = require('path'),
+        fs = require('fs');
 
     require('load-grunt-tasks')(grunt);
 
@@ -156,17 +161,30 @@ function generateGruntfile (generatedConfig) {
 
     // Handle new files with that have a new, supported preprocessor
     grunt.event.on('watch', function(action, filepath) {
-      if (action !== 'added') return;
-
       var ext = path.extname(filepath);
 
       // Ignore directories
-      if (! ext) return;
+      if (fs.lstatSync(filepath).isDirectory()) return;
 
-      // This is a special message that's parsed by Mule
-      // to determine if support for an additional preprocessor is necessary
-      // Note: this allows us to avoid controlling grunt manually within Mule
-      console.log('EXTADDED:' + ext);
+      if (action === 'added') {
+        // This is a special message that's parsed by Mule
+        // to determine if support for an additional preprocessor is necessary
+        // Note: this allows us to avoid controlling grunt manually within Mule
+        console.log('EXTADDED:' + ext);
+
+      // Note: we don't do anything for newly added .js files
+      // A new js file can't be the root unless it's changed to require
+      // the current root and saved/changed
+      } else if (action === 'changed' || action === 'deleted') {
+        if (ext === '.js') {
+          // Ignore bundles
+          if (/.+bundle.js/g.test(filepath)) return;
+
+          // Notify YA to recompute the roots and
+          // generate a configuration
+          console.log('JSCHANGED:' + filepath);
+        }
+      }
     });
 
     // For watching entire directories but allowing
@@ -196,7 +214,7 @@ module.exports.prototype.runTask = function (taskName) {
 
   child.stdout.on('data', function(data) {
     // relay output to console
-    console.log(data);
+    console.log(prettifyGruntOutput(data));
   });
 
   return d.promise;
@@ -214,32 +232,36 @@ module.exports.prototype.watch = function () {
       child;
 
   child = exec('grunt watch', function(err, stdout) {
-    console.log(stdout);
+    console.log(prettifyGruntOutput(stdout));
 
     if (err) {
+      console.log('Watch error: ', err);
       d.reject(err);
     } else {
       d.resolve();
     }
   });
 
+  // Scrapes the output of the child
+  // and emits events based on file additions/changes
   child.stdout.on('data', function(data) {
-    // Check for the extension added flag
-    var pattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
-        matches = [],
-        match;
+    var addedFiles = getFilesAdded(data),
+        changedJSFiles = getJSFilesChanged(data);
 
-    // Grab all added extensions
-    while (match = pattern.exec(data)) {
-      matches.push(match[2]);
+    if (addedFiles.length) {
+      this.emit('added', addedFiles);
+      // Strip out the internal events
+      data = data.replace(_fileAddedPattern, '');
     }
 
-    if (matches.length) {
-      this.emit('added', matches);
+    if (changedJSFiles.length) {
+      this.emit('jsChanged', changedJSFiles);
+      data = data.replace(_jsChangedPattern, '');
     }
 
-    // Remove the flag from the output
-    console.log(data.replace(pattern, ''));
+    data = prettifyGruntOutput(data);
+
+    console.log(data);
 
   }.bind(this));
 
@@ -247,6 +269,36 @@ module.exports.prototype.watch = function () {
 
   return d.promise;
 };
+
+function getFilesAdded(output) {
+  // Check for the extension added flag
+  return getMatches(output, _fileAddedPattern);
+}
+
+function getJSFilesChanged(output) {
+  return getMatches(output, _jsChangedPattern);
+}
+
+// Series of transformations for grunt's output
+// to make it less ugly
+function prettifyGruntOutput(str) {
+  // Remove all back-to-back newlines
+  str = str.replace(/(\n|\r)*/g, '');
+  return str;
+}
+
+// Returns a list of pattern matches against the source string
+function getMatches(source, pattern) {
+  var matches = [],
+      match;
+
+  // Grab all added extensions
+  while (match = pattern.exec(source)) {
+    matches.push(match[2]);
+  }
+
+  return matches;
+}
 
 // Restarts the existing watch process
 module.exports.prototype.rewatch = function () {
@@ -263,6 +315,20 @@ module.exports.prototype.rewatch = function () {
   } else {
     cb();
   }
+};
+
+module.exports.prototype.stopWatching = function () {
+  var that = this,
+      deferred = q.defer();
+
+  this.watchChild.on('close', function () {
+    that.watchChild = null;
+    deferred.resolve();
+  });
+
+  this.watchChild.kill('SIGHUP');
+
+  return deferred.promise;
 };
 
 // Triggers the compile tasks to precompile any existing files
