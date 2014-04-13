@@ -16,6 +16,9 @@
     "process",
     "automation"
   ],
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
+  },
   "author": "Joel Kemp <joel@mrjoelkemp.com>",
   "license": "MIT",
   "dependencies": {
@@ -26,5 +29,9 @@
   },
   "bin": {
     "ya": "bin/ya.js"
+  },
+  "devDependencies": {
+    "mocha": "^1.18.2",
+    "expect.js": "^0.3.1"
   }
 }
