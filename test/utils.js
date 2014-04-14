@@ -105,6 +105,45 @@ describe('Utils', function () {
   });
 
   describe('bindAll', function () {
+    it('binds all properties of the object to the object', function () {
+      var obj = {
+        a: 2,
+        foo: function () {
+          return this.a;
+        }
+      },
 
+      obj2 = {
+        a: 5
+      };
+
+      utils.bindAll(obj);
+
+      obj2.foo = obj.foo;
+
+      expect(obj2.foo()).to.equal(2);
+    });
+
+    it('binds all properties of the object\'s prototype to the object', function () {
+      var obj = Object.create({
+        a: 2,
+        foo: function () {
+          return this.a;
+        }
+      }),
+
+      obj2 = {
+        a: 5
+      };
+
+      utils.bindAll(obj);
+
+      obj2.foo = obj.foo;
+      expect(obj2.foo()).to.equal(2);
+    });
+
+    it('throws if given a non-object', function () {
+      expect(function () { utils.bindAll('foo'); }).to.throwError();
+    });
   });
 });
