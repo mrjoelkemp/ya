@@ -11,58 +11,78 @@ function Ya () {
 }
 
 Ya.prototype.init = function (directory) {
-  var that = this;
-
   this.directory = directory || this.directory;
+
+  // Lazily installed in case we want to dynamically determine
+  // the build engine later on
+  this.dependencies = [
+    'grunt',
+    'grunt-cli',
+    'load-grunt-tasks',
+    'grunt-contrib-watch',
+    'grunt-newer'
+  ];
+
+  // Collection of folders that should be ignored so YA doesn't
+  // try to process them and get all confused
+  this.ignoredDirs = [
+    'node_modules',
+    '.git',
+    '.sass-cache',
+    'bower_components',
+    'vendor'
+  ];
 
   this.engine = new GruntHelper(this.directory);
   this.engine.on('added', onAddedExtensions.bind(this));
   this.engine.on('jsChanged', onJSChanged.bind(this));
+
+  utils.bindAll(this);
+
+  return q();
+};
+
+// Installs YA's npm dependencies
+Ya.prototype.installDependencies = function () {
+  var that = this;
+
+  return q.all(this.dependencies.map(npmh.isLibInstalled))
+  .then(function (results) {
+    // Only install the libs that haven't already been installed
+    var notInstalled = that.dependencies.filter(function (dep, idx) {
+      return ! results[idx];
+    });
+
+    if (notInstalled.length) {
+      notInstalled.map(function (ni) {
+        console.log('Installing: ', ni);
+      });
+    }
+
+    return q.all(notInstalled.map(npmh.installLib));
+  });
+};
+
+// Setter to notify YA of the extensions to be used/processed
+Ya.prototype.setUsedExtensions = function (extensions) {
+  this.extensions = extensions || [];
+};
+
+// Creates an empty package.json file in the working directory
+// to allow YA to continue initialization and installation of
+// (saved) dependencies.
+Ya.prototype.handleDefaultPackageJSON = function () {
+  var that = this;
 
   return npmh.hasPackageJsonFile(this.directory)
   .then(function (hasFile) {
     if (! hasFile) {
       return npmh.createEmptyPackageJsonFile(that.directory);
     }
-  })
-  .then(installDependencies)
-  .then(getUniqueExtensions.bind(this))
-  .then(getSupportedExtensions.bind(this))
-
-  .then(function (exts) {
-    if (exts.length) {
-      console.log('Supported extensions found: ', exts);
-      that.extensions = exts;
-    }
-
-    return exts;
-  })
-
-  .then(processSupportedExtensions.bind(this))
-
-  .then(function (targets) {
-    that.processedPromises = targets;
-    return that._generateConfig();
-  })
-
-  .then(function (config) {
-    console.log('Grunt configuration generated');
-
-    return that.engine.flushConfig(config)
-      .then(function () {
-        console.log('Gruntfile.js saved to ' + that.directory);
-        return config;
-      });
-  })
-
-  .then(function (config) {
-    return that.engine.compileTasks(config)
-      .then(function () {
-        console.log('Compiled existing files in ' + that.directory);
-      });
   });
 };
 
+// Initiates the build engine's watch task
 Ya.prototype.watch = function () {
   this.engine.watch();
 };
@@ -107,6 +127,26 @@ Ya.prototype.getExtensionSettings = function (ext) {
     }.bind(this));
 };
 
+Ya.prototype.processExtensions = function () {
+  return q.all(this.extensions.map(this.processExtension));
+};
+
+// Installs all library dependencies for that extension
+// and resolves with the build engine configuration settings
+// Precond: ext is a supported extension (i.e., has settings)
+Ya.prototype.processExtension = function (ext) {
+  return this.getExtensionSettings(ext)
+  .then(function (settings) {
+    // A preprocessor can require multiple libraries installed
+    var libs = settings.lib instanceof Array ? settings.lib : [settings.lib];
+
+    return q.all(libs.map(npmh.installIfNecessary.bind(npmh)))
+      .then(function () {
+        return settings;
+      });
+  });
+};
+
 // Adds the new extension to the processing pipeline and regenerates
 // the build engine configuration
 Ya.prototype.processAdditionalExtension = function (ext) {
@@ -115,7 +155,7 @@ Ya.prototype.processAdditionalExtension = function (ext) {
   this.extensions.push(ext);
   this.processedPromises.push(this.processExtension(ext));
 
-  return this._generateConfig()
+  return this.generateConfig()
     .then(function (config) {
       return that.engine.flushConfig(config)
         .then(function () {
@@ -130,36 +170,63 @@ Ya.prototype.processAdditionalExtension = function (ext) {
     .done();
 };
 
+// Returns true if the given extension has already been processed
 Ya.prototype.isExtensionAlreadyProcessed = function (ext) {
-  return this.extensions.indexOf(ext) !== -1;
+  return this.extensions.indexOf(utils.dotExt(ext)) !== -1;
 };
 
-// Installs all library dependencies for that extension
-// and resolves with the build engine configuration settings
-// Precond: ext is a supported extension (i.e., has settings)
-Ya.prototype.processExtension = function (ext) {
-  return this.getExtensionSettings(ext)
-    .then(function (settings) {
-      // A preprocessor can require multiple libraries installed
-      var libs = settings.lib instanceof Array ? settings.lib : [settings.lib];
+// Returns all extensions found in the current directory
+Ya.prototype.findUsedExtensions = function () {
+  return gux({
+    path:            this.directory,
+    exclusions:      utils.ignoredDirs,
+    includeDotFiles: true
+  });
+};
 
-      return q.all(libs.map(npmh.installIfNecessary.bind(npmh)))
-        .then(function () {
-          return settings;
-        });
+// Returns a subset of the given extensions that YA supports
+Ya.prototype.filterSupportedExtensions = function (extensions) {
+  return q.all(extensions.map(this.isExtensionSupported.bind(this)))
+  .then(function (results) {
+
+    // Grab all extensions that have a truthy support value
+    var supported = extensions.filter(function (ext, idx) {
+      return results[idx];
     });
+
+    return supported;
+  });
 };
 
-Ya.prototype._generateConfig = function () {
-  return this._getProcessedTargets()
+// Resolves with the build engine configuration for all
+// processed extensions
+Ya.prototype.generateConfig = function () {
+  return this.getAllSettings()
     .then(function (targets) {
       return this.engine.getConfig(targets, this.extensions);
     }.bind(this));
 };
 
-Ya.prototype._getProcessedTargets = function () {
+// Flushes the build engine configuration to disk
+Ya.prototype.flushConfig = function (config) {
+  return this.engine.flushConfig(config);
+};
+
+Ya.prototype.compileTasks = function (config) {
+  return this.engine.compileTasks(config);
+};
+
+// Returns a list of promises that resolve with the
+// settings objects of all processed extensions
+Ya.prototype.getAllSettings = function () {
   return q.all(this.processedPromises);
 };
+
+// Sets the list of processed extensions' settings
+Ya.prototype.setAllSettings = function (settingsList) {
+  this.processedPromises = settingsList;
+};
+
 
 ///////////////
 // Listeners
@@ -209,7 +276,7 @@ function onJSChanged() {
     console.log('An app root has changed');
 
     // Need all of the targets to regenerate the gruntfile
-    return that._getProcessedTargets().then(function (targets) {
+    return that.getAllSettings().then(function (targets) {
       // console.log('Getting config')
       return that.engine.getConfig(targets, that.extensions);
     })
@@ -233,63 +300,6 @@ function onJSChanged() {
         });
     });
   });
-}
-
-///////////////
-// Helpers
-///////////////
-
-function installDependencies() {
-  var dependencies = [
-    'grunt',
-    'grunt-cli',
-    'load-grunt-tasks',
-    'grunt-contrib-watch',
-    'grunt-newer'
-  ];
-
-  return q.all(dependencies.map(npmh.isLibInstalled))
-    .then(function (results) {
-      // Only install the libs that haven't already been installed
-      var notInstalled = dependencies.filter(function (dep, idx) {
-        return ! results[idx];
-      });
-
-      if (notInstalled.length) {
-        notInstalled.map(function (ni) {
-          console.log('Installing: ', ni);
-        });
-      }
-
-      return q.all(notInstalled.map(npmh.installLib));
-    });
-}
-
-// Returns all extensions found in the current directory
-function getUniqueExtensions() {
-  return gux({
-    path:            this.directory,
-    exclusions:      utils.ignoredDirs,
-    includeDotFiles: true
-  });
-}
-
-// Returns a system-supported subset of the given list
-function getSupportedExtensions(extensions) {
-  return q.all(extensions.map(this.isExtensionSupported.bind(this)))
-    .then(function (results) {
-
-      // Grab all extensions that have a truthy support value
-      var supported = extensions.filter(function (ext, idx) {
-        return results[idx];
-      });
-
-      return supported;
-    });
-}
-
-function processSupportedExtensions(extensions) {
-  return q.all(extensions.map(this.processExtension.bind(this)));
 }
 
 module.exports = new Ya();
