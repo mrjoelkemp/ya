@@ -4,6 +4,8 @@ var gux         = require('node-unique-extensions'),
     GruntHelper = require('./helpers/GruntHelper'),
     utils       = require('./helpers/Utils');
 
+'use strict';
+
 function Ya () {
   this.directory         = '.';
   this.processedPromises = [];
