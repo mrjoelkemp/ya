@@ -44,6 +44,39 @@ Ya.prototype.init = function (directory) {
   return q();
 };
 
+// Make sure YA's dependencies are installed
+Ya.prototype.startup = function () {
+  return q()
+  .then(this.handleDefaultPackageJSON)
+  .then(this.installDependencies);
+};
+
+// Returns a promise that resolves with the settings for each
+// processed/supported extension found in the working directory
+Ya.prototype.yaExtensions = function () {
+  return q()
+  .then(this.findUsedExtensions)
+  .then(this.filterSupportedExtensions)
+  .then(this.setUsedExtensions)
+  .then(this.processExtensions);
+};
+
+// Takes in the settings of all processed/found extensions
+// and generates a build engine configuration file
+// Returns a promise that resolves with the build configuration object
+Ya.prototype.generateBuildConfig = function (allSettings) {
+  return q.fncall(function () {
+    return allSettings;
+  })
+  .then(this.setAllSettings)
+  .then(this.generateConfig)
+  .then(function (config) {
+    return this.flushConfig(config).then(function () {
+      return config;
+    }.bind(this));
+  }.bind(this));
+};
+
 // Installs YA's npm dependencies
 Ya.prototype.installDependencies = function () {
   var that = this;
