@@ -4,34 +4,34 @@ var q = require('q'),
     utils    = require('../helpers/Utils');
 
 var
-  compassSettings = {
-    lib: 'grunt-contrib-compass',
-    target: {
-      compass: {
-        dist: {
-          options: {
-            sassDir: '.',
-            cssDir:  '.'
+    compassSettings = {
+      lib: 'grunt-contrib-compass',
+      target: {
+        compass: {
+          dist: {
+            options: {
+              sassDir: '.',
+              cssDir:  '.'
+            }
           }
         }
       }
-    }
-  },
+    },
 
-  sassSettings = {
-    lib: 'grunt-contrib-sass',
-    target: {
-      sass: {
-        dist: {
-          files: [{
-            expand: true,
-            src: ['**/*.{scss, sass}', '!node_modules/**/*.{scss, sass}'],
-            ext: '.css'
-          }]
+    sassSettings = {
+      lib: 'grunt-contrib-sass',
+      target: {
+        sass: {
+          dist: {
+            files: [{
+              expand: true,
+              src: ['**/*.{scss, sass}', '!node_modules/**/*.{scss, sass}'],
+              ext: '.css'
+            }]
+          }
         }
       }
-    }
-  };
+    };
 
 // Resolves with whether or not the Compass gem is installed
 function isCompassInstalled() {
