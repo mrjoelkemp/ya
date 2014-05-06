@@ -8,12 +8,7 @@ var expect = require('expect.js'),
     after          = mocha.after,
     afterEach      = mocha.afterEach,
     fs             = require('fs'),
-    ya             = require('../'),
-    chai           = require('chai'),
-    chaiAsPromised = require('chai-as-promised');
-
-chai.use(chaiAsPromised);
-
+    ya             = require('../');
 
 function shouldEventuallyProduceFile(filename, doneCallback) {
   // This can be gathered from producing an equivalent css file
