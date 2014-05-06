@@ -200,6 +200,8 @@ module.exports.prototype.runTask = function (taskName) {
       cmd = taskName ? 'grunt ' + taskName : 'grunt',
       child;
 
+  cmd += ' --gruntfile ' + this.directory;
+
   child = exec(cmd, function(err, stdout) {
     console.log(stdout);
 
@@ -229,9 +231,12 @@ module.exports.prototype.watch = function () {
   console.log('Starting grunt watch');
 
   var d = q.defer(),
-      child;
+      child,
+      cmd = 'grunt watch';
 
-  child = exec('grunt watch', function(err, stdout) {
+  cmd += ' --gruntfile ' + this.directory;
+
+  child = exec(cmd, function(err, stdout) {
     console.log(prettifyGruntOutput(stdout));
 
     if (err) {
@@ -341,5 +346,5 @@ module.exports.prototype.compileTasks = function (config) {
   // Remove watch
   targets.splice(targets.indexOf('watch'), 1);
 
-  return q.all(targets.map(this.runTask));
+  return q.all(targets.map(this.runTask.bind(this)));
 };
