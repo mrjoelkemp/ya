@@ -65,16 +65,16 @@ Ya.prototype.yaExtensions = function () {
 // and generates a build engine configuration file
 // Returns a promise that resolves with the build configuration object
 Ya.prototype.generateBuildConfig = function (allSettings) {
-  return q.fncall(function () {
-    return allSettings;
-  })
-  .then(this.setAllSettings)
-  .then(this.generateConfig)
+  var that = this;
+
+  this.setAllSettings(allSettings);
+
+  return this.generateConfig()
   .then(function (config) {
-    return this.flushConfig(config).then(function () {
+    return that.flushConfig(config).then(function () {
       return config;
-    }.bind(this));
-  }.bind(this));
+    });
+  });
 };
 
 // Installs YA's npm dependencies
