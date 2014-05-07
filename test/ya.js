@@ -139,12 +139,22 @@ describe('YA', function() {
     });
 
     describe('Preprocessors', function () {
-      it('compiles sass', function (done) {
+      after(function () {
+        unlink(dir.path + '/styles.css');
+        unlink(dir.path + '/test.js');
+      });
+
+      /**
+       * Helper to test preprocessor compilation
+       * Expects the this context to be Mocha's 'it'
+       * @param  {String}   file An empty preprocessor file to create
+       * @param  {String}   into The filepath that should eventually get created
+       * @param  {Function} done The callback to execute when the into file is created
+       */
+      function shouldCompile(file, into, done) {
         this.timeout(10000);
 
-        var samplesass = 'body { color: blue; h1 { color: red; }}';
-
-        fs.writeFileSync(sassPath, samplesass);
+        fs.writeFileSync(file, '');
 
         q()
         .then(ya.startup)
@@ -159,22 +169,47 @@ describe('YA', function() {
         .then(ya.compileTasks)
         .then(function () {
           process.chdir('../');
-          shouldEventuallyProduceFile(dir.path + '/styles.css', done);
+          shouldEventuallyProduceFile(into, done);
         });
+      }
+
+      it('compiles sass', function (done) {
+        shouldCompile.call(this, sassPath, dir.path + '/styles.css', done);
       });
 
-      it.skip('compiles coffeescript', function () {
-
+      it('compiles coffeescript', function (done) {
+        shouldCompile.call(this, dir.path + '/test.coffee', dir.path + '/test.js', done);
       });
 
-      it.skip('compiles jade');
-      it.skip('compiles jsx');
-      it.skip('compiles less');
-      it.skip('compiles slim');
+      it('compiles jade', function (done) {
+        shouldCompile.call(this, dir.path + '/test.jade', dir.path + '/test.html', done);
+      });
+
+      it.skip('compiles jsx', function (done) {
+        shouldCompile.call(this, dir.path + '/react.jsx', dir.path + '/react.js', done);
+      });
+
+      it('compiles less', function (done) {
+        shouldCompile.call(this, dir.path + '/test.less', dir.path + '/test.css', done);
+      });
+
+      it('compiles slim', function (done) {
+        shouldCompile.call(this, dir.path + '/fat.slim', dir.path + '/fat.html', done);
+      });
+
       it.skip('compiles compass');
-      it.skip('compiles stylus');
-      it.skip('compiles typescript');
+
+      it('compiles stylus', function (done) {
+        shouldCompile.call(this, dir.path + '/stylus.styl', dir.path + '/stylus.css', done);
+      });
+
+      it('compiles typescript', function (done) {
+        shouldCompile.call(this, dir.path + '/type.ts', dir.path + '/type.js', done);
+      });
     });
+
+    // TODO: need to test that the addition of new files while YA is running
+    // will still compile as needed
 
     describe('Build Tooling', function () {
       it.skip('browserifies a commonjs app');
