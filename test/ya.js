@@ -1,18 +1,39 @@
-var expect = require('expect.js'),
-    temp           = require('temporary'),
-    File           = temp.File,
-    Dir            = temp.Dir,
-    mocha          = require('mocha'),
-    beforeEach     = mocha.beforeEach,
-    before         = mocha.before,
-    after          = mocha.after,
-    afterEach      = mocha.afterEach,
-    fs             = require('fs'),
-    ya             = require('../');
+var
+    expect     = require('expect.js'),
+    mocha      = require('mocha'),
+    fs         = require('fs'),
+    beforeEach = mocha.beforeEach,
+    before     = mocha.before,
+    after      = mocha.after,
+    afterEach  = mocha.afterEach,
+    ya         = require('../'),
+    q          = require('q');
 
+/**
+ * Stub replacement for node-temporary since we want
+ * all tests to run about the sandbox directory
+ * @type {Object}
+ */
+var dir = {
+  path: './sandbox'
+};
+
+var
+    pjsonPath = dir.path + '/package.json',
+    sassPath = dir.path + '/styles.scss',
+    gruntfilePath = dir.path + '/Gruntfile.js',
+    nodeModulesPath = dir.path + '/node_modules';
+
+
+ya.init(dir.path);
+
+
+/**
+ * Checks for the eventual existence of the given file
+ * @param  {String} filename The file that should eventually be created
+ * @param  {Function} doneCallback Executed when the file exists
+ */
 function shouldEventuallyProduceFile(filename, doneCallback) {
-  // This can be gathered from producing an equivalent css file
-  // We want to check that compilation happens, not test the compilation
   (function checkForFile() {
     setTimeout(function () {
       fs.exists(filename, function (exists) {
@@ -25,67 +46,103 @@ function shouldEventuallyProduceFile(filename, doneCallback) {
   })();
 }
 
+/**
+ * Synchronously removes the file if it exists
+ * @param  {String} filename The file to delete
+ */
+function removeFile(filename) {
+  if (fs.existsSync(filename)) {
+    fs.unlinkSync(filename);
+  }
+}
+
+/**
+ * Synchronously removes the directory, if it exists
+ * @param  {String} dirname The directory to delete
+ */
+function removeDir(dirname) {
+  if (fs.existsSync(dirname)) {
+    fs.rmdirSync(dirname);
+  }
+}
+
+/**
+ * Synchonously unlinks the path, if it exists
+ * @param  {String} path The path (file/dir/symlink) to unlink
+ */
+function unlink(path) {
+  if (fs.existsSync(path)) {
+    fs.unlink(path);
+  }
+}
+
+
 describe('YA', function() {
+  // Remove symlinks
+  unlink(nodeModulesPath);
+  unlink(pjsonPath);
+
+  // Destroy sanbox directory (if exists)
+  removeDir(dir.path);
+  fs.mkdirSync(dir.path);
+
+  // Symlink the node_modules folder
+  fs.symlinkSync('../node_modules', dir.path + '/node_modules', 'dir');
+  fs.symlinkSync('../package.json', dir.path + '/package.json', 'file');
+
   describe('Fresh directory usage', function () {
-    var dir;
-
-    before(function () {
-      dir  = new Dir();
-    });
-
     after(function () {
-      dir.rmdir();
+      removeFile(pjsonPath);
+      removeFile(gruntfilePath);
     });
 
     it('generates an empty package.json file if it doesn\'t exist in the target dir', function (done) {
-      ya
-      .init(dir.path)
+      q()
       .then(ya.handleDefaultPackageJSON)
       .then(function () {
-        fs.exists(dir.path + '/package.json', function (exists) {
+        fs.exists(pjsonPath, function (exists) {
           expect(exists).to.be.ok();
           done();
         });
+      });
+    });
+
+    it('still generates a Gruntfile.js file', function (done) {
+      q()
+      .then(ya.yaExtensions)
+      .then(ya.generateBuildConfig)
+      .then(function () {
+        shouldEventuallyProduceFile(gruntfilePath, done);
       });
     });
   });
 
   describe('Dirty directory usage', function () {
     var
-        dir,
         samplesass = 'body { color: blue; h1 { color: red; }}',
         samplepjson = { name: 'hi' };
 
-    before(function () {
-      dir  = new Dir();
-
-      // Init test file for package.json generation
-      fs.writeFileSync(dir.path + '/package.json', '');
-
-      // Init test files to test precompilation
-      fs.writeFileSync(dir.path + '/styles.scss', samplesass);
-    });
-
     after(function () {
-      dir.rmdir();
+      removeFile(pjsonPath);
+      removeFile(sassPath);
     });
 
     it('does not generate a package.json file is one already exists', function (done) {
-      ya
-      .init(dir.path)
+      fs.writeFileSync(pjsonPath, '');
+
+      q()
       .then(ya.handleDefaultPackageJSON)
       .then(function () {
-        var contents = fs.readFileSync(dir.path + '/package.json').toString();
+        var contents = fs.readFileSync(pjsonPath).toString();
         expect(contents).to.equal('');
         done();
       });
     });
 
     it.skip('compiles all sass files in the directory', function (done) {
-      this.timeout(60000);
+      fs.writeFileSync(sassPath, samplesass);
 
-      ya
-      .init(dir.path)
+      q()
       .then(ya.startup)
       .then(ya.yaExtensions)
       .then(ya.generateBuildConfig)
@@ -93,10 +150,6 @@ describe('YA', function() {
       .then(function () {
         shouldEventuallyProduceFile(dir.path + 'styles.css', done);
       });
-    });
-
-    it.skip('generates a Gruntfile.js file', function () {
-
     });
   });
 });
