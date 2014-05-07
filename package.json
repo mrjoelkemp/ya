@@ -4,7 +4,7 @@
   "description": "Use your favorite preprocessors without the hassle of configuration",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
+    "test": "rm -rf ./sandbox && ./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
@@ -12,6 +12,8 @@
   },
   "keywords": [
     "productivity",
+    "preprocessors",
+    "compile",
     "build",
     "process",
     "automation"
