@@ -337,4 +337,8 @@ function onJSChanged() {
   });
 }
 
+/**
+ * Export the singleton
+ * @type {Ya}
+ */
 module.exports = new Ya();
