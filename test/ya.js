@@ -2,12 +2,15 @@ var
     expect     = require('expect.js'),
     mocha      = require('mocha'),
     fs         = require('fs'),
+    q          = require('q'),
+
     beforeEach = mocha.beforeEach,
     before     = mocha.before,
     after      = mocha.after,
     afterEach  = mocha.afterEach,
+
     ya         = require('../'),
-    q          = require('q');
+    npmh       = require('../helpers/NpmHelper');
 
 /**
  * Stub replacement for node-temporary since we want
@@ -47,16 +50,6 @@ function shouldEventuallyProduceFile(filename, doneCallback) {
 }
 
 /**
- * Synchronously removes the file if it exists
- * @param  {String} filename The file to delete
- */
-function removeFile(filename) {
-  if (fs.existsSync(filename)) {
-    fs.unlinkSync(filename);
-  }
-}
-
-/**
  * Synchronously removes the directory, if it exists
  * @param  {String} dirname The directory to delete
  */
@@ -72,7 +65,7 @@ function removeDir(dirname) {
  */
 function unlink(path) {
   if (fs.existsSync(path)) {
-    fs.unlink(path);
+    fs.unlinkSync(path);
   }
 }
 
@@ -86,22 +79,34 @@ describe('YA', function() {
   removeDir(dir.path);
   fs.mkdirSync(dir.path);
 
-  // Symlink the node_modules folder
+  // Symlink for access to the grunt plugins
   fs.symlinkSync('../node_modules', dir.path + '/node_modules', 'dir');
+  // Need this for load-grunt-tasks
   fs.symlinkSync('../package.json', dir.path + '/package.json', 'file');
 
   describe('Fresh directory usage', function () {
     after(function () {
-      removeFile(pjsonPath);
-      removeFile(gruntfilePath);
+      unlink(pjsonPath);
+      unlink(gruntfilePath);
     });
 
     it('generates an empty package.json file if it doesn\'t exist in the target dir', function (done) {
+      var tmp = dir.path + '/tmp';
+
+      // Since the package.json is symlinked, create a tmp dir
+      fs.mkdirSync(tmp);
+
+      ya.init(tmp);
+
       q()
       .then(ya.handleDefaultPackageJSON)
       .then(function () {
-        fs.exists(pjsonPath, function (exists) {
+        fs.exists(tmp + '/package.json', function (exists) {
           expect(exists).to.be.ok();
+          // Reset the working directory
+          ya.init(dir.path);
+          unlink(tmp + '/package.json');
+          removeDir(tmp);
           done();
         });
       });
@@ -119,34 +124,38 @@ describe('YA', function() {
 
   describe('Dirty directory usage', function () {
     after(function () {
-      removeFile(pjsonPath);
-      removeFile(sassPath);
+      unlink(sassPath);
     });
 
     it('does not generate a package.json file is one already exists', function (done) {
-      fs.writeFileSync(pjsonPath, '');
-
       q()
       .then(ya.handleDefaultPackageJSON)
       .then(function () {
-        var contents = fs.readFileSync(pjsonPath).toString();
-        expect(contents).to.equal('');
+        // Ya should not have changed the package.json contents
+        var current = fs.readFileSync(pjsonPath).toString(),
+            dummy = JSON.stringify(npmh.getDummyPackageJson());
+
+        expect(current).not.to.equal(dummy);
         done();
       });
     });
 
-    it.skip('compiles all sass files in the directory', function (done) {
-      var samplesass = 'body { color: blue; h1 { color: red; }}';
+    describe('Preprocessors', function () {
+      it.skip('compiles all sass files in the directory', function (done) {
+        this.timeout(10000);
 
-      fs.writeFileSync(sassPath, samplesass);
+        var samplesass = 'body { color: blue; h1 { color: red; }}';
 
-      q()
-      .then(ya.startup)
-      .then(ya.yaExtensions)
-      .then(ya.generateBuildConfig)
-      .then(ya.compileTasks)
-      .then(function () {
-        shouldEventuallyProduceFile(dir.path + 'styles.css', done);
+        fs.writeFileSync(sassPath, samplesass);
+
+        q()
+        .then(ya.startup)
+        .then(ya.yaExtensions)
+        .then(ya.generateBuildConfig)
+        .then(ya.compileTasks)
+        .then(function () {
+          shouldEventuallyProduceFile(dir.path + 'styles.css', done);
+        });
       });
     });
   });
