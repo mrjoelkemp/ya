@@ -34,6 +34,19 @@
     "grunt-cli": "^0.1.13",
     "load-grunt-tasks": "^0.4.0",
     "grunt-contrib-watch": "^0.6.1",
-    "grunt-newer": "^0.7.0"
+    "grunt-newer": "^0.7.0",
+    "grunt-contrib-sass": "^0.7.3",
+    "grunt-contrib-coffee": "^0.10.1",
+    "grunt-contrib-jade": "^0.11.0",
+    "browserify": "^3.46.0",
+    "grunt-browserify": "^2.0.8",
+    "grunt-contrib-requirejs": "^0.4.4",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-react": "^0.8.2",
+    "grunt-contrib-less": "^0.11.0",
+    "grunt-contrib-compass": "^0.7.2",
+    "grunt-slim": "^0.1.0",
+    "grunt-contrib-stylus": "^0.15.1",
+    "grunt-typescript": "^0.3.5"
   }
 }

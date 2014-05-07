@@ -118,10 +118,6 @@ describe('YA', function() {
   });
 
   describe('Dirty directory usage', function () {
-    var
-        samplesass = 'body { color: blue; h1 { color: red; }}',
-        samplepjson = { name: 'hi' };
-
     after(function () {
       removeFile(pjsonPath);
       removeFile(sassPath);
@@ -140,6 +136,8 @@ describe('YA', function() {
     });
 
     it.skip('compiles all sass files in the directory', function (done) {
+      var samplesass = 'body { color: blue; h1 { color: red; }}';
+
       fs.writeFileSync(sassPath, samplesass);
 
       q()
