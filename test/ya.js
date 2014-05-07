@@ -141,7 +141,7 @@ describe('YA', function() {
     });
 
     describe('Preprocessors', function () {
-      it.skip('compiles all sass files in the directory', function (done) {
+      it.skip('compiles sass', function (done) {
         this.timeout(10000);
 
         var samplesass = 'body { color: blue; h1 { color: red; }}';
@@ -157,6 +157,24 @@ describe('YA', function() {
           shouldEventuallyProduceFile(dir.path + 'styles.css', done);
         });
       });
+
+      it.skip('compiles coffeescript', function () {
+
+      });
+
+      it.skip('compiles jade');
+      it.skip('compiles jsx');
+      it.skip('compiles less');
+      it.skip('compiles slim');
+      it.skip('compiles compass');
+      it.skip('compiles stylus');
+      it.skip('compiles typescript');
+    });
+
+    describe('Build Tooling', function () {
+      it.skip('browserifies a commonjs app');
+      it.skip('r.js compiles an amd app');
+      it.skip('jshints all js files');
     });
   });
 });
