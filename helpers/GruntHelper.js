@@ -200,8 +200,6 @@ module.exports.prototype.runTask = function (taskName) {
       cmd = taskName ? 'grunt ' + taskName : 'grunt',
       child;
 
-  cmd += ' --gruntfile ' + this.directory;
-
   child = exec(cmd, function(err, stdout) {
     console.log(stdout);
 
@@ -233,8 +231,6 @@ module.exports.prototype.watch = function () {
   var d = q.defer(),
       child,
       cmd = 'grunt watch';
-
-  cmd += ' --gruntfile ' + this.directory;
 
   child = exec(cmd, function(err, stdout) {
     console.log(prettifyGruntOutput(stdout));

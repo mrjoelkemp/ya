@@ -71,12 +71,7 @@ function unlink(path) {
 
 
 describe('YA', function() {
-  // Remove symlinks
-  unlink(nodeModulesPath);
-  unlink(pjsonPath);
-
-  // Destroy sanbox directory (if exists)
-  removeDir(dir.path);
+  // Make sandbox directory (if exists)
   fs.mkdirSync(dir.path);
 
   // Symlink for access to the grunt plugins
@@ -117,7 +112,10 @@ describe('YA', function() {
       .then(ya.yaExtensions)
       .then(ya.generateBuildConfig)
       .then(function () {
-        shouldEventuallyProduceFile(gruntfilePath, done);
+        shouldEventuallyProduceFile(gruntfilePath, function () {
+          unlink(gruntfilePath);
+          done();
+        });
       });
     });
   });
@@ -141,7 +139,7 @@ describe('YA', function() {
     });
 
     describe('Preprocessors', function () {
-      it.skip('compiles sass', function (done) {
+      it('compiles sass', function (done) {
         this.timeout(10000);
 
         var samplesass = 'body { color: blue; h1 { color: red; }}';
@@ -152,9 +150,16 @@ describe('YA', function() {
         .then(ya.startup)
         .then(ya.yaExtensions)
         .then(ya.generateBuildConfig)
+        .then(function (config) {
+          // grunt (or grunt-load-tasks) will fail unless we're in the sandbox
+          process.chdir(dir.path);
+
+          return config;
+        })
         .then(ya.compileTasks)
         .then(function () {
-          shouldEventuallyProduceFile(dir.path + 'styles.css', done);
+          process.chdir('../');
+          shouldEventuallyProduceFile(dir.path + '/styles.css', done);
         });
       });
 
