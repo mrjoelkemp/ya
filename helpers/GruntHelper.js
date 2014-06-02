@@ -11,9 +11,16 @@ var _fileAddedPattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
 
 module.exports = function (directory) {
   EventEmitter.call(this);
+
   this.directory  = directory;
 
   this.ignoreWatchDirectories = utils.ignoredDirs;
+
+  /**
+   * Use the locally installed grunt command instead of the global grunt
+   * @type {String}
+   */
+  this.gruntCmd = './node_modules/grunt-cli/bin/grunt';
 };
 
 util.inherits(module.exports, EventEmitter);
@@ -197,7 +204,7 @@ function generateGruntfile (generatedConfig) {
 // Resolve when done
 module.exports.prototype.runTask = function (taskName) {
   var d = q.defer(),
-      cmd = taskName ? 'grunt ' + taskName : 'grunt',
+      cmd = taskName ? this.gruntCmd + ' ' + taskName : this.gruntCmd,
       child;
 
   child = exec(cmd, function(err, stdout) {
@@ -230,7 +237,7 @@ module.exports.prototype.watch = function () {
 
   var d = q.defer(),
       child,
-      cmd = 'grunt watch';
+      cmd = this.gruntCmd + ' watch';
 
   child = exec(cmd, function(err, stdout) {
     console.log(prettifyGruntOutput(stdout));
