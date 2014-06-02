@@ -1,7 +1,7 @@
 {
   "name": "ya.js",
   "version": "0.5.4",
-  "description": "Use your favorite preprocessors without the hassle of configuration",
+  "description": "Auto-generates your Gruntfile as you build front-end applications",
   "main": "index.js",
   "scripts": {
     "test": "rm -rf ./sandbox && ./node_modules/.bin/mocha --reporter spec 'test/**/*.js'"
@@ -24,7 +24,7 @@
     "q": "~1.0.0",
     "node-unique-extensions": "^2.2.0",
     "app-root": "^1.2.6",
-    "module-definition": "^1.0.3"
+    "module-definition": "^1.1.0"
   },
   "bin": {
     "ya": "bin/ya.js"
