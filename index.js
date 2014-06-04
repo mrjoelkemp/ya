@@ -2,7 +2,8 @@ var gux         = require('node-unique-extensions'),
     q           = require('q'),
     npmh        = require('./helpers/NpmHelper'),
     GruntHelper = require('./helpers/GruntHelper'),
-    utils       = require('./helpers/Utils');
+    utils       = require('./helpers/Utils'),
+    exth        = require('./helpers/ExtensionHelper');
 
 'use strict';
 
@@ -122,46 +123,6 @@ Ya.prototype.watch = function () {
   this.engine.watch();
 };
 
-// An extension is supported if we have a settings file for it
-Ya.prototype.isExtensionSupported = function (ext) {
-  var deferred = q.defer();
-
-  if (ext) {
-    return utils.exists(this.getSettingsFilepath(ext));
-
-  } else {
-    deferred.resolve(false);
-  }
-
-  return deferred.promise;
-};
-
-// Returns the path of the settings file for the given extension.
-// Note: the settings file isn't guaranteed to exist
-Ya.prototype.getSettingsFilepath = function (ext) {
-  var extension = ext[0] === '.' ? ext.slice(1) : ext;
-  return __dirname + '/settings/' + extension + '-settings.js';
-};
-
-// Resolves with a settings object for the given extension or
-// null if the extension is not supported
-Ya.prototype.getExtensionSettings = function (ext) {
-
-  return this.isExtensionSupported(ext)
-    .then(function (isSupported) {
-      if (isSupported) {
-        // Settings will either be an object literal
-        // for simple preprocessors that have static settings
-        // or a promise that resolves with the settings
-        // for preprocessors performing async to determine settings
-        return require(this.getSettingsFilepath(ext));
-
-      } else {
-        return null;
-      }
-    }.bind(this));
-};
-
 Ya.prototype.processExtensions = function () {
   return q.all(this.extensions.map(this.processExtension));
 };
@@ -170,7 +131,7 @@ Ya.prototype.processExtensions = function () {
 // and resolves with the build engine configuration settings
 // Precond: ext is a supported extension (i.e., has settings)
 Ya.prototype.processExtension = function (ext) {
-  return this.getExtensionSettings(ext)
+  return exth.getExtensionSettings(ext)
   .then(function (settings) {
     // A preprocessor can require multiple libraries installed
     var libs = settings.lib instanceof Array ? settings.lib : [settings.lib];
@@ -221,7 +182,7 @@ Ya.prototype.findUsedExtensions = function () {
 
 // Returns a subset of the given extensions that YA supports
 Ya.prototype.filterSupportedExtensions = function (extensions) {
-  return q.all(extensions.map(this.isExtensionSupported.bind(this)))
+  return q.all(extensions.map(exth.isExtensionSupported.bind(exth)))
   .then(function (results) {
 
     // Grab all extensions that have a truthy support value
@@ -276,7 +237,7 @@ function onAddedExtensions (extensions) {
 
     if (this.isExtensionAlreadyProcessed(ext)) return;
 
-    this.isExtensionSupported(ext).done(function (isSupported) {
+    exth.isExtensionSupported(ext).done(function (isSupported) {
       if (! isSupported) return;
 
       this.processAdditionalExtension(ext);
