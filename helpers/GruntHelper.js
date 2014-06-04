@@ -63,10 +63,19 @@ module.exports.prototype.getCompileConfig = function (targets) {
 
 // Attaches the watch configuration to the passed grunt configuration
 module.exports.prototype.getWatchConfig = function (gruntConfig, extensions) {
-  var watchConfig = {};
+  var watchConfig = {},
+      targets = Object.keys(gruntConfig),
+      // If we have both types, then the number of configuration
+      // targets exceeds the number of extensions, so we need to remedy that
+      hasBothJSModuleTypes = targets.indexOf('browserify') !== -1 &&
+                              targets.indexOf('requirejs') !== -1;
+
+  if (hasBothJSModuleTypes) {
+    extensions.splice(extensions.indexOf('.js') + 1, 0, '.js');
+  }
 
   // Watch the files for handled extensions
-  Object.keys(gruntConfig).forEach(function (target, idx) {
+  targets.forEach(function (target, idx) {
     var currentExt = extensions[idx];
 
     // TODO: This should likely be a per-extension setting config

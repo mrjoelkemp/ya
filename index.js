@@ -298,7 +298,6 @@ function onJSChanged() {
   //    a root file changes: index.js could remove require of lib/index making index.js a root and lib/index a root
   //    a non-root file changes: b.js is the root and a.js changes to require b.js making it the new root
   return this.jsh.getRoots().then(function (roots) {
-    // console.log('Pulled roots', roots, '\nold roots: ', that.jsh._oldRoots)
     return that.jsh.haveRootsChanged(roots);
   })
   .then(function (haveRootsChanged) {
@@ -312,18 +311,13 @@ function onJSChanged() {
 
     // Need all of the targets to regenerate the gruntfile
     return that.getAllSettings().then(function (targets) {
-      // console.log('Getting config')
       return that.engine.getConfig(targets, that.extensions);
     })
     .then(function (config) {
       // Grab the targets for the apps and merge with the existing targets
       return that.jsh.getSettings().then(function (settings) {
-        // console.log('JS Settings: ', settings)
-        // console.log('JS Settings Target: ', settings.target)
-
         utils.shallowExtend(config, settings.target);
 
-        // console.log('Extended Config: ', config)
         return config;
       });
     })
