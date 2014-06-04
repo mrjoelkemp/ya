@@ -1,4 +1,5 @@
 module.exports.lib = 'grunt-slim';
+module.exports.useNewer = true;
 module.exports.target = {
   slim: {
     dist: {

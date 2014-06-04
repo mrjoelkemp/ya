@@ -1,5 +1,6 @@
 module.exports.lib = 'grunt-contrib-stylus';
 module.exports.targetName = 'stylus';
+module.exports.useNewer = true;
 module.exports.target = {
   stylus: {
     dist: {

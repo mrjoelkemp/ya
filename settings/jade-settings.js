@@ -1,4 +1,5 @@
 module.exports.lib = 'grunt-contrib-jade';
+module.exports.useNewer = true;
 module.exports.target = {
   jade: {
     dist: {

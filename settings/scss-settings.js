@@ -6,6 +6,8 @@ var q = require('q'),
 var
     compassSettings = {
       lib: 'grunt-contrib-compass',
+      useNewer: true,
+
       target: {
         compass: {
           dist: {
@@ -20,6 +22,8 @@ var
 
     sassSettings = {
       lib: 'grunt-contrib-sass',
+      useNewer: true,
+
       target: {
         sass: {
           dist: {
