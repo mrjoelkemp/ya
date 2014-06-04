@@ -1,4 +1,5 @@
 module.exports.lib = 'grunt-react';
+module.exports.useNewer = true;
 module.exports.target = {
   jsx: {
     dist: {

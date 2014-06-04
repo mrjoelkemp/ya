@@ -1,6 +1,7 @@
 var utils = require('../helpers/Utils');
 
 module.exports.lib = 'grunt-contrib-jshint';
+module.exports.useNewer = true;
 module.exports.target = {
   jshint: {
     options: {

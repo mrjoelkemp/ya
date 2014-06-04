@@ -1,4 +1,5 @@
 module.exports.lib = 'grunt-typescript';
+module.exports.useNewer = true;
 module.exports.target = {
   typescript: {
     dist: {

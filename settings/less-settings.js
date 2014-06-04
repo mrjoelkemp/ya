@@ -1,4 +1,5 @@
 module.exports.lib = 'grunt-contrib-less';
+module.exports.useNewer = true;
 module.exports.target = {
   less: {
     dist: {
