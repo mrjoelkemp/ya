@@ -35,7 +35,7 @@ It manages Grunt (currently, but could be user-choosen in the future) behind the
 auto-generate and maintain your Gruntfile –
 downloading any dependencies and recompiling changes along the way.
 
-`npm install ya.js`
+`npm install -g ya.js`
 
 ### Usage
 
