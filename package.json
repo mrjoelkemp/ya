@@ -1,6 +1,6 @@
 {
   "name": "ya.js",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Auto-generates your Gruntfile as you build front-end applications",
   "main": "index.js",
   "scripts": {
