@@ -9,12 +9,12 @@ var fs           = require('fs'),
 var _fileAddedPattern = /(EXTADDED:)(\.[a-zA-Z]+)/g,
     _jsChangedPattern = /(JSCHANGED:)(.+)/g;
 
-module.exports = function (directory) {
+module.exports = function (options) {
   EventEmitter.call(this);
 
-  this.directory  = directory;
+  this.directory  = options.directory;
 
-  this.ignoreWatchDirectories = utils.ignoredDirs;
+  this.ignoreWatchDirectories = options.ignoredDirs;
 
   /**
    * Use the locally installed grunt command instead of the global grunt
@@ -183,9 +183,9 @@ function generateGruntfile (generatedConfig) {
       if (fs.lstatSync(filepath).isDirectory()) return;
 
       if (action === 'added') {
-        // This is a special message that's parsed by Mule
+        // This is a special message that's parsed by YA
         // to determine if support for an additional preprocessor is necessary
-        // Note: this allows us to avoid controlling grunt manually within Mule
+        // Note: this allows us to avoid controlling grunt manually within YA
         console.log('EXTADDED:' + ext);
 
       // Note: we don't do anything for newly added .js files

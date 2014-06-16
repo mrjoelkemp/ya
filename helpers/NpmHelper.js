@@ -27,6 +27,7 @@ module.exports.installIfNecessary = function (lib) {
 // A library/module is already installed if its folder exists
 // within node_modules
 module.exports.isLibInstalled = function (lib) {
+  // @todo: need to check in this.directory
   var installDir = './node_modules/' + lib,
       deferred = q.defer();
 
@@ -44,6 +45,7 @@ module.exports.isLibInstalled = function (lib) {
 module.exports.installLib = function (lib) {
   var deferred = q.defer(),
       // Get the grunt package to install
+      // @todo: need to install in this.directory
       installCmd = 'npm install --save-dev ' + lib;
 
   // Install it
@@ -64,8 +66,8 @@ module.exports.hasPackageJsonFile = function (directory) {
 
   var deferred = q.defer();
 
-  // TODO: Are we guaranteed for the package.json file to live in supplied directory?
   directory = utils.slashDir(directory);
+  this.directory = directory;
 
   fs.exists(directory + 'package.json', function (exists) {
     deferred.resolve(exists);
