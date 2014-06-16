@@ -24,7 +24,8 @@
     "q": "~1.0.0",
     "node-unique-extensions": "^2.2.0",
     "app-root": "^1.2.6",
-    "module-definition": "^1.1.0"
+    "module-definition": "^1.1.0",
+    "minimist": "^0.1.0"
   },
   "bin": {
     "ya": "bin/ya.js"

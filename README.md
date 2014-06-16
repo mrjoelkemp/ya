@@ -15,6 +15,7 @@ An experimental, zero-configuration, front-end, build tool.
 4. [Examples](#examples)
  - [YA a New Project](#starting-a-new-project)
  - [YA an Existing Project](#ya-an-existing-project)
+ - [Only using YA for preprocessors](#using-ya-only-for-preprocessor-compilation)
 5. [Preprocessors Supported](#preprocessors-supported)
  - [CSS](#css)
  - [JS](#js)
@@ -42,6 +43,8 @@ downloading any dependencies and recompiling changes along the way.
 Simply run `ya` in an empty or non-empty directory and it will start working for you.
 
 `ya [directory]` (defaults to `.` if a directory is not supplied)
+
+* [Known issue](https://github.com/mrjoelkemp/ya/issues/35) if you `ya` a subdirectory. `cd` into that directory and run `ya` in the interim.
 
 That's it. Running the above command will do the following for you:
 
@@ -134,6 +137,16 @@ YA should only process/manage files relevant to your application, not its depend
 * YA will run `grunt watch` to watch for new preprocessors being used and for file changes
 
 **Note: If you have an existing Gruntfile, YA will overwrite it.**
+
+#### Using YA only for preprocessor compilation
+
+You can set the `preprocess` flag when running `ya` to avoid the JS processing
+and only handle the automatic Grunt configuration for the preprocessors that you use.
+
+`ya [directory] --preprocess=1`
+
+This is helpful if, for example, you're building a Node.js app that doesn't need
+browserify capability.
 
 ### Preprocessors Supported
 

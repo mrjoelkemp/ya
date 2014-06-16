@@ -2,7 +2,8 @@ var gux         = require('node-unique-extensions'),
     q           = require('q'),
     npmh        = require('./helpers/NpmHelper'),
     GruntHelper = require('./helpers/GruntHelper'),
-    utils       = require('./helpers/Utils');
+    utils       = require('./helpers/Utils'),
+    args        = require('minimist')(process.argv);
 
 'use strict';
 
@@ -35,7 +36,16 @@ Ya.prototype.init = function (directory) {
     'vendor'
   ];
 
-  this.engine = new GruntHelper(this.directory);
+  // Handles ya'ing a subdirectory
+  // this.ignoredDirs = this.ignoredDirs.map(function (dir) {
+  //   return utils.slashDir(this.directory) + dir;
+  // }, this);
+
+  this.engine = new GruntHelper({
+    directory:   this.directory,
+    ignoredDirs: this.ignoredDirs
+  });
+
   this.engine.on('added', onAddedExtensions.bind(this));
   this.engine.on('jsChanged', onJSChanged.bind(this));
 
@@ -126,11 +136,11 @@ Ya.prototype.watch = function () {
 Ya.prototype.isExtensionSupported = function (ext) {
   var deferred = q.defer();
 
-  if (ext) {
-    return utils.exists(this.getSettingsFilepath(ext));
+  if (! ext || args.preprocess && ext === '.js') {
+    deferred.resolve(false);
 
   } else {
-    deferred.resolve(false);
+    return utils.exists(this.getSettingsFilepath(ext));
   }
 
   return deferred.promise;
