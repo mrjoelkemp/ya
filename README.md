@@ -2,8 +2,6 @@
 
 *Like "Ya mule!"*
 
-An experimental, zero-configuration, front-end, build tool.
-
 1. [Motivation](#motivation)
 2. [Usage](#usage)
  - [Automatically compile preprocessors](#automatically-compile-preprocessors)
